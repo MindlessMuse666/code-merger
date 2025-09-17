@@ -1,0 +1,13 @@
+# Backend
+backend/server
+
+# Logs
+*.log
+.env
+
+# Business/System analysis 
+/docs/prompt/
+
+# IDE
+.vscode/
+.idea/
