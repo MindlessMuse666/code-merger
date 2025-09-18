@@ -1,0 +1,183 @@
+# API Specification // API Спецификация
+
+## 1. Листинг [OpenAPI 3.0](./openapi.yaml) (yaml)
+
+```yaml
+openapi: 3.0.0
+info:
+  title: code-merger API
+  description: API для объединения текстовых файлов
+  version: 1.0.0
+  contact:
+    name: MindlessMuse666
+    email: mindlessmuse.666@gmail.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /api/upload:
+    post:
+      summary: Загрузка файлов для обработки
+      description: |
+        Принимает один или несколько файлов для последующего объединения.
+        Проверяет расширения и размер файлов.
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Массив файлов для загрузки
+      responses:
+        '200':
+          description: Файлы успешно загружены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Files uploaded successfully
+                  file_ids:
+                    type: array
+                    items:
+                      type: string
+                    description: Идентификаторы загруженных файлов
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Превышен лимит размера файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: Неподдерживаемый тип файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/merge:
+    post:
+      summary: Объединение загруженных файлов
+      description: |
+        Объединяет ранее загруженные файлы в один текстовый файл
+        с соблюдением правил форматирования.
+      tags:
+        - Processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - file_ids
+                - output_filename
+                - file_renames
+              properties:
+                file_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: Массив идентификаторов файлов для объединения
+                output_filename:
+                  type: string
+                  description: Имя результирующего файла
+                  example: code-base.txt
+                file_renames:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: |
+                    Объект с mapping оригинальных имен файлов к новым именам
+                    Пример: {"original.txt": "renamed.txt"}
+      responses:
+        '200':
+          description: Успешное объединение файлов
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Имя файла для скачивания
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Файлы не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Описание ошибки
+        details:
+          type: object
+          description: Дополнительные детали ошибки
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+```
+
+## 2. Пояснения к API
+
+### 2.1. Эндпоинт `/api/upload`
+
+- Принимает файлы через `multipart/form-data`.
+- Проверяет расширения файлов (поддерживаемые форматы указаны в [SRS](../02-system/software-requirements-specification.md)).
+- Проверяет размер файлов (максимум 10MB на файл, 50MB общий размер).
+- Возвращает идентификаторы загруженных файлов для последующего использования.
+
+### 2.2 Эндпоинт `/api/merge`
+
+- Принимает `JSON` с параметрами объединения:
+  - `file_ids` - массив идентификаторов файлов.
+  - `output_filename` - имя результирующего файла.
+  - `file_renames` - объект для переименования файлов.
+- Возвращает бинарный поток с объединенным файлом.
+- Устанавливает заголовок `Content-Disposition` для автоматического скачивания.
+
+## 3. Обработка ошибок
+
+Все ошибки возвращаются в формате `JSON` с описанием ошибки и дополнительными деталями.
+
+## 4. Безопасность
+
+API использует Bearer-аутентификацию (`JWT`), хотя в первой версии это может быть не реализовано.

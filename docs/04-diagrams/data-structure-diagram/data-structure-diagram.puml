@@ -1,0 +1,49 @@
+@startuml code-merger-data-structures
+!theme mars
+
+skinparam groupInheritance 2
+
+package "Frontend" #faaac7 {
+  package "HTTP Request: POST /api/upload" #6574b2 {
+    class formData {
+      + files: File[] (binary)
+    }
+  }
+
+  package "HTTP Request: POST /api/merge" #6574b2 {
+    class MergeRequest {
+      + file_ids: string[]
+      + output_filename: string
+      + file_renames: Map<string, string>
+    }
+  }
+}
+
+package "Backend" #a2d2ff {
+
+  class FileMetadata {
+    + id: string (UUID)
+    + original_name: string
+    + custom_name: string
+    + extension: string
+    + content: []byte
+    + comment_prefix: string
+  }
+
+  class MergeRequest {
+    + file_ids: string[]
+    + output_filename: string
+    + file_renames: Map<string, string>
+  }
+
+  class MergeResult {
+    + content: []byte
+    + filename: string
+  }
+}
+
+formData --> MergeRequest : Transforms into
+MergeRequest --> Backend.MergeRequest : Maps to
+Backend.MergeRequest --> FileMetadata : references by id
+
+@enduml

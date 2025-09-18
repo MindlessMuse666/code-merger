@@ -1,0 +1,21 @@
+@startuml code-merger-context-diagram
+!theme mars
+
+left to right direction
+
+skinparam actorStyle awesome
+skinparam actorFontStyle bold
+skinparam UsecaseFontStyle bold
+
+actor "Юзер" as user #e7b276
+
+package "Система code-merger" #fdfcdcff {
+    usecase "Frontend (Браузер)"  as frontend #faaac7
+    usecase "Backend (Go сервер)" as backend #a2d2ff
+}
+
+user --> frontend : Использует\n(загружает файлы,\nнастраивает порядок,\nгенерует результат)
+frontend --> backend : Отправляет HTTP-запросы\n(загрузка файлов, объединение)
+backend -l-> frontend : Возвращает ответы\n(ID файлов, результат объединения)
+
+@enduml

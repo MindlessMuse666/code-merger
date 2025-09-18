@@ -1,0 +1,32 @@
+@startuml code-merger-sequence-diagram
+!theme mars
+
+skinparam actorFontStyle bold
+skinparam actorStyle awesome
+skinparam participantFontStyle bold
+
+actor "Юзер" as user #e7b276
+participant "Frontend" as frontend #faaac7
+participant "Backend" as backend #a2d2ff
+
+user++ #e7b276
+frontend++ #faaac7
+user -> frontend : Перетаскивает файлы в UI
+frontend -> backend ++ #a2d2ff : POST /api/upload (multipart/form-data)
+backend -> backend : Проверяет расширения и размер файлов
+backend -> backend : Сохраняет файлы во временное хранилище
+backend --> frontend -- : 200 OK + ID файлов
+frontend -> frontend : Отображает карточки файлов
+
+user -> frontend : Настраивает порядок и имена файлов
+user -> frontend : Нажимает "Объединить"
+
+frontend -> backend ++ #a2d2ff : POST /api/merge (JSON с file_ids, output_filename, file_renames)
+backend -> backend : Загружает файлы по ID
+backend -> backend : Применяет переименования
+backend -> backend : Генерирует результат с форматированием
+backend --> frontend -- : Возвращает результат как файл (application/octet-stream)
+
+frontend --> user : Автоматически скачивает результат\nили показывает ссылку для скачивания
+
+@enduml
