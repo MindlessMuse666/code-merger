@@ -1,0 +1,14 @@
+{
+  "name": "code-merger-frontend",
+  "version": "1.0.0",
+  "description": "Фронтенд для приложения code-merger",
+  "scripts": {
+    "dev": "tailwindcss -i ./input.css -o ./style.css --watch",
+    "build": "tailwindcss -i ./input.css -o ./style.css --minify"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.3.0"
+  }
+}

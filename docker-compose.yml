@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # Сервис бэка
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # Пробрасываем порт наружу
+    volumes:
+      - ./backend:/app              # Монтируем код бэка для разработки
+      - ./frontend:/root/static:ro  # Монтируем статические файлы фронта
+    environment:
+      - MAX_FILE_SIZE=10485760   # Максимальный размер файла (10 МБ)
+      - MAX_TOTAL_SIZE=52428800  # Максимальный общий размер (50 МБ)
+    restart: unless-stopped      # Автоматически перезапускаться при падении
+
+  # Сервис для разработки фронта с горячей перезагрузкой
+  frontend-dev:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app  # Монтируем код фронта
+    ports:
+      - "3000:3000"      # Порт для разработки фронта
+    command: sh -c "npm install && npm run dev"  # Устанавливаем зависимости и запускаем в dev-режиме
+    environment:
+      - HOST=0.0.0.0     # Разрешаем доступ с любого хоста
