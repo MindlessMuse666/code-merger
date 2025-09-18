@@ -106,7 +106,9 @@
 | `.txt` | `#` | `# notes.txt` |
 | `.yaml` | `#` | `# config.yaml` |
 | `.yml` | `#` | `# docker-compose.yml` |
+| `.sh` | `#` | `# install-tailwind.sh` |
 | `Dockerfile` | `#` | `# Dockerfile` |
+| `Makefile` | `#` | `# Makefile` |
 | `.json` | `//` | `// settings.json` |
 | `.cpp` | `//` | `// main.cpp` |
 | `.go` | `//` | `// main.go` |
