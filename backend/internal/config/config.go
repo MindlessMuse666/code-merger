@@ -1,3 +1,5 @@
+// Package config предоставляет функциональность для работы с конфигом приложения.
+// Конфиг загружается из переменных окружения с значениями по умолчанию.
 package config
 
 import (
@@ -5,13 +7,15 @@ import (
 	"strconv"
 )
 
+// Config содержит настройки приложения
 type Config struct {
 	Port         string
 	MaxFileSize  int64
 	MaxTotalSize int64
 }
 
-// Загружает конфиг проекта
+// Load загружает конфиг из переменных окружения
+// Возвращает ошибку, если не удалось преобразовать числовые значения
 func Load() (*Config, error) {
 	port := getEnv("PORT", "8080")
 	maxFileSizeStr := getEnv("MAX_FILE_SIZE", "10485760")
@@ -34,6 +38,7 @@ func Load() (*Config, error) {
 	}, nil
 }
 
+// getEnv возвращает значение переменной окружения или значение по умолчанию
 func getEnv(key string, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {
