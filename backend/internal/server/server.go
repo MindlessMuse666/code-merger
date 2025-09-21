@@ -12,10 +12,13 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/MindlessMuse666/code-merger/docs"
 	"github.com/MindlessMuse666/code-merger/internal/config"
+	"github.com/MindlessMuse666/code-merger/internal/handler"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // Server предоставляет HTTP-сервер приложения
@@ -25,6 +28,7 @@ type Server struct {
 }
 
 // NewServer создает новый экземпляр HTTP-сервера
+// Принимает конфиг и возвращает сконфигурированный сервер
 func NewServer(cfg *config.Config) *Server {
 	r := chi.NewRouter()
 
@@ -41,6 +45,13 @@ func NewServer(cfg *config.Config) *Server {
 	}))
 
 	// Инициализация обработчиков
+	uploadHandler := handler.NewUploadHandler(cfg)
+	mergeHandler := handler.NewMergeHandler()
+
+	// Маршрут для Swagger UI
+	r.Mount("/swagger", httpSwagger.WrapHandler)
+
+	// Регистрация маршрутов
 	r.Post("/api/upload", uploadHandler.HandleUpload)
 	r.Post("/api/merge", mergeHandler.HandleMerge)
 
@@ -50,6 +61,9 @@ func NewServer(cfg *config.Config) *Server {
 	}
 }
 
+// Run запускает HTTP-сервер с поддержкой graceful shutdown
+// Сервер будет обрабатывать запросы до получения сигнала завершения
+// Возвращает ошибку в случае неудачного запуска или завершения
 func (s *Server) Run() error {
 	srv := &http.Server{
 		Addr:         ":" + s.cfg.Port,

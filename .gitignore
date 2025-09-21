@@ -1,6 +1,9 @@
 # Backend
 backend/server
 
+# Frontend
+node_modules
+
 # Logs
 *.log
 .env

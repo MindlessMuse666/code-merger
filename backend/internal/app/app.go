@@ -3,8 +3,8 @@
 package app
 
 import (
-	"github.com/MindlessMuse666/code-merger/cmd/server"
 	"github.com/MindlessMuse666/code-merger/internal/config"
+	"github.com/MindlessMuse666/code-merger/internal/server"
 )
 
 // Run инициализирует и запускает приложение

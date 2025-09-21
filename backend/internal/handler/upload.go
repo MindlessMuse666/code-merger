@@ -3,13 +3,10 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/MindlessMuse666/code-merger/internal/config"
@@ -27,13 +24,6 @@ type UploadResponse struct {
 	FileIDs []string `json:"file_ids"` // Массив идентификаторов загруженных файлов
 }
 
-// ErrorResponce представляет структуру ошибки API
-// Используется для стандартизации JSON-ответов с ошибками
-type ErrorResponce struct {
-	Error   string `json:"error"`             // Описание ошибки
-	Details string `json:"details,omitempty"` // Дополнительные детали ошибки
-}
-
 // NewUploadHandler создает новый экземпляр UploadHandler
 // Принимает конфиг приложения и возвращает инициализированный обработчик
 func NewUploadHandler(cfg *config.Config) *UploadHandler {
@@ -42,11 +32,11 @@ func NewUploadHandler(cfg *config.Config) *UploadHandler {
 
 // HandleUpload обрабатывает загрузку файлов через multipart/form-data
 // @Summary Загрузка файлов для обработки
-// @Description Принимает один или несколько файлов для последующего объединения
+// @Description Принимает один или несколько файлов для последующего объединения. Проверяет расширения и размер файлов.
 // @Tags Files
 // @Accept multipart/form-data
 // @Produce json
-// @Param files formData file true "Файлы для загрузки"
+// @Param files formData file true "Массив файлов для загрузки"
 // @Success 200 {object} UploadResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 413 {object} ErrorResponse
@@ -57,13 +47,13 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, h.cfg.MaxTotalSize)
 
 	if err := r.ParseMultipartForm(h.cfg.MaxTotalSize); err != nil {
-		h.sendError(w, http.StatusBadRequest, "failed to parse multipart form", err.Error())
+		sendError(w, http.StatusBadRequest, "failed to parse multipart form", err.Error())
 		return
 	}
 
 	files := r.MultipartForm.File["files"]
 	if len(files) == 0 {
-		h.sendError(w, http.StatusBadRequest, "no files provided", "please provide at least one file")
+		sendError(w, http.StatusBadRequest, "no files provided", "please provide at least one file")
 		return
 	}
 
@@ -73,26 +63,26 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	for _, fileHeader := range files {
 		// Валидация: размер файлв
 		if fileHeader.Size > h.cfg.MaxFileSize {
-			h.sendError(w, http.StatusRequestEntityTooLarge, "file too large", fmt.Sprintf("file %s exceeds maximum size limit", fileHeader.Filename))
+			sendError(w, http.StatusRequestEntityTooLarge, "file too large", fmt.Sprintf("file %s exceeds maximum size limit", fileHeader.Filename))
 			return
 		}
 
 		totalSize += fileHeader.Size
 		if totalSize > h.cfg.MaxTotalSize {
-			h.sendError(w, http.StatusRequestEntityTooLarge, "total size exceeded", "total size of all files exceeds limit")
+			sendError(w, http.StatusRequestEntityTooLarge, "total size exceeded", "total size of all files exceeds limit")
 			return
 		}
 
 		// Валидация: расширения файла
-		if !h.isValidExtension(fileHeader.Filename) {
-			h.sendError(w, http.StatusUnsupportedMediaType, "unsupported file type", fmt.Sprintf("file &s has unsupported extension", fileHeader.Filename))
+		if !isValidExtension(fileHeader.Filename) {
+			sendError(w, http.StatusUnsupportedMediaType, "unsupported file type", fmt.Sprintf("file &s has unsupported extension", fileHeader.Filename))
 			return
 		}
 
 		// Обработка файла
 		fileId, err := h.processFile(fileHeader)
 		if err != nil {
-			h.sendError(w, http.StatusInternalServerError, "failed to process file", err.Error())
+			sendError(w, http.StatusInternalServerError, "failed to process file", err.Error())
 			return
 		}
 
@@ -126,38 +116,6 @@ func (h *UploadHandler) processFile(fileHeader *multipart.FileHeader) (string, e
 	// TODO(будущая фича): Сохранить файл во временное хранилище или память (fileID как ключ)
 
 	return fileID, nil
-}
-
-// isValidExtension проверяет поддерживается ли расширение файла
-// TODO(дополняется): Поддерживаемые расширения: .md, .txt, .yaml, .yml, Dockerfile, Makefile, .json, .cpp, .go, .py, .html, .css, .js
-func (h *UploadHandler) isValidExtension(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	if ext == "" {
-		// Валидация: специальные случаи без расширения
-		base := strings.ToLower(filepath.Base(filename))
-		return base == "dockerfile" || base == "makefile"
-	}
-
-	supported := map[string]bool{
-		".md": true, ".txt": true, ".yaml": true, ".yml": true,
-		".json": true, ".cpp": true, ".go": true, ".py": true,
-		".html": true, ".css": true, ".js": true, ".sh": true,
-	}
-
-	return supported[ext]
-}
-
-// sendError отправляет ошибку в формате JSON
-func (h *UploadHandler) sendError(w http.ResponseWriter, statusCode int, errorMsg string, details string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-
-	response := ErrorResponce{
-		Error:   errorMsg,
-		Details: details,
-	}
-
-	json.NewEncoder(w).Encode(response)
 }
 
 // isTextContent валидирует, что содержимое является текстовым
