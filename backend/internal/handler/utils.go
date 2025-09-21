@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 // ErrorResponse представляет структуру ошибки API
@@ -30,16 +31,14 @@ func getCommentPrefix(filename string) string {
 	ext := strings.ToLower(filepath.Ext(filename))
 	base := strings.ToLower(filepath.Base(filename))
 
-	if base == "dockerfile" || base == "makefile" {
+	switch {
+	case base == "dockerfile" || base == "makefile":
 		return "#"
-	}
-
-	switch ext {
-	case ".md", ".html":
+	case ext == ".md" || ext == ".html":
 		return "<!--"
-	case ".css":
+	case ext == ".css":
 		return "/*"
-	case ".js", ".go", ".cpp", ".java", ".json":
+	case ext == ".js" || ext == ".go" || ext == ".cpp" || ext == ".java" || ext == ".json":
 		return "//"
 	default:
 		return "#"
@@ -62,4 +61,15 @@ func isValidExtension(filename string) bool {
 	}
 
 	return supported[ext]
+}
+
+// isTextContent валидирует, что содержимое является текстовым
+func isTextContent(content string) bool {
+	for _, r := range content {
+		// Разрешаем печатные символы, пробелы и управляющие символы
+		if !unicode.IsPrint(r) && !unicode.IsSpace(r) && r != '\t' && r != '\n' && r != '\r' {
+			return false
+		}
+	}
+	return true
 }

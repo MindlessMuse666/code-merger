@@ -3,19 +3,27 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"time"
+	"unicode/utf8"
+
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 
 	"github.com/MindlessMuse666/code-merger/internal/config"
+	"github.com/MindlessMuse666/code-merger/internal/storage"
 )
 
 // UploadHandler обрабатывает загрузку файлов через multipart/form-data
 // Отвечает за валидацию, обработку и временное хранение загруженных файлов
 type UploadHandler struct {
-	cfg *config.Config
+	cfg     *config.Config
+	storage *storage.MemoryStorage
 }
 
 // UploadResponse представляет успешный ответ на загрузку файлов
@@ -26,8 +34,11 @@ type UploadResponse struct {
 
 // NewUploadHandler создает новый экземпляр UploadHandler
 // Принимает конфиг приложения и возвращает инициализированный обработчик
-func NewUploadHandler(cfg *config.Config) *UploadHandler {
-	return &UploadHandler{cfg: cfg}
+func NewUploadHandler(cfg *config.Config, storage *storage.MemoryStorage) *UploadHandler {
+	return &UploadHandler{
+		cfg:     cfg,
+		storage: storage,
+	}
 }
 
 // HandleUpload обрабатывает загрузку файлов через multipart/form-data
@@ -63,7 +74,7 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	totalSize := int64(0)
 
 	for _, fileHeader := range files {
-		// Валидация: размер файлв
+		// Валидация: размер файла
 		if fileHeader.Size > h.cfg.MaxFileSize {
 			sendError(w, http.StatusRequestEntityTooLarge, "file too large", fmt.Sprintf("file %s exceeds maximum size limit", fileHeader.Filename))
 			return
@@ -90,6 +101,13 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 
 		fileIDs = append(fileIDs, fileId)
 	}
+
+	// Возврат успешного ответа
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UploadResponse{
+		Message: "files uploaded successfully",
+		FileIDs: fileIDs,
+	})
 }
 
 // processFile обрабатывает загруженный файл
@@ -107,32 +125,59 @@ func (h *UploadHandler) processFile(fileHeader *multipart.FileHeader) (string, e
 		return "", fmt.Errorf("failed to read file content: %v", err)
 	}
 
+	// Конвертация в UTF-8
+	utf8Content, err := convertToUTF8(content)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert file to UTF-8: %v", err)
+	}
+
 	// Валидация: файл является текстовым
-	if !isTextContent(content) {
+	if !isTextContent(utf8Content) {
 		return "", fmt.Errorf("file appears to be binary: %s", fileHeader.Filename)
 	}
 
 	// TODO(временная реализация): Генерация уникального ID для файла
 	fileID := generateFileID()
 
-	// TODO(будущая фича): Сохранить файл во временное хранилище или память (fileID как ключ)
+	h.storage.Store(fileID, storage.FileData{
+		Content:  utf8Content,
+		Filename: fileHeader.Filename,
+		UploadAt: time.Now(),
+	})
 
 	return fileID, nil
-}
-
-// isTextContent валидирует, что содержимое является текстовым
-// TODO(можно улучшить): Первичная реализация
-func isTextContent(content []byte) bool {
-	for _, b := range content {
-		if b < 9 || (b > 13 && b < 32) && b != 27 {
-			return false
-		}
-	}
-	return true
 }
 
 // generateFileID гененирует уникальный ID для файла
 // TODO(временная реализация): В prod использовать uuid
 func generateFileID() string {
 	return fmt.Sprintf("file_%d", time.Now().UnixNano())
+}
+
+func convertToUTF8(content []byte) (string, error) {
+	// Попробуем декодировать из common encodings
+	encodings := map[string]transform.Transformer{
+		"windows-1251": charmap.Windows1251.NewDecoder(),
+		"ISO-8859-1":   charmap.ISO8859_1.NewDecoder(),
+		// Добавьте другие кодировки при необходимости
+	}
+
+	for _, decoder := range encodings {
+		reader := transform.NewReader(bytes.NewReader(content), decoder)
+		decoded, err := io.ReadAll(reader)
+		if err == nil && isUTF8(decoded) {
+			return string(decoded), nil
+		}
+	}
+
+	// Если не удалось декодировать, проверяем UTF-8
+	if isUTF8(content) {
+		return string(content), nil
+	}
+
+	return "", fmt.Errorf("unable to convert to UTF-8")
+}
+
+func isUTF8(content []byte) bool {
+	return utf8.Valid(content)
 }

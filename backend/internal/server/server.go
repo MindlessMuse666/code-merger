@@ -15,6 +15,7 @@ import (
 	_ "github.com/MindlessMuse666/code-merger/docs"
 	"github.com/MindlessMuse666/code-merger/internal/config"
 	"github.com/MindlessMuse666/code-merger/internal/handler"
+	"github.com/MindlessMuse666/code-merger/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -29,7 +30,7 @@ type Server struct {
 
 // NewServer создает новый экземпляр HTTP-сервера
 // Принимает конфиг и возвращает сконфигурированный сервер
-func NewServer(cfg *config.Config) *Server {
+func NewServer(cfg *config.Config, storage *storage.MemoryStorage) *Server {
 	r := chi.NewRouter()
 
 	// Настройка middleware
@@ -45,8 +46,8 @@ func NewServer(cfg *config.Config) *Server {
 	}))
 
 	// Инициализация обработчиков
-	uploadHandler := handler.NewUploadHandler(cfg)
-	mergeHandler := handler.NewMergeHandler()
+	uploadHandler := handler.NewUploadHandler(cfg, storage)
+	mergeHandler := handler.NewMergeHandler(storage)
 
 	// Маршрут для Swagger UI
 	r.Mount("/swagger", httpSwagger.WrapHandler)

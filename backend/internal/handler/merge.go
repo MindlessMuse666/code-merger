@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/MindlessMuse666/code-merger/internal/storage"
 )
 
 // MergeHandler обрабатывает объединение файлов
 type MergeHandler struct {
-	// TODO(добавить): зависимости (сервис для работы с файлами)
+	storage *storage.MemoryStorage
 }
 
 // MergeRequest представляет запрос на объединение файлов
@@ -26,8 +28,10 @@ type FileContent struct {
 }
 
 // NewMergeHandler создает новый экземпляр MergeHandler
-func NewMergeHandler() *MergeHandler {
-	return &MergeHandler{}
+func NewMergeHandler(storage *storage.MemoryStorage) *MergeHandler {
+	return &MergeHandler{
+		storage: storage,
+	}
 }
 
 // HandleMerge обрабатывает запрос на объединение файлов
@@ -62,8 +66,7 @@ func (h *MergeHandler) HandleMerge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(временная реализация): логика полученияфайлов по их ID
-	// Сейчас используем заглушку
+	// Получение файлов из хранилища
 	filesContent, err := h.getFilesContent(request.FileIDs, request.FileRenames)
 	if err != nil {
 		sendError(w, http.StatusNotFound, "files not found", err.Error())
@@ -111,27 +114,25 @@ func (h *MergeHandler) mergeFiles(files []FileContent) string {
 	return result.String()
 }
 
-// getFilesContent возвращает содержимое файлов по их ID (заглушка)
-// В реальной реализации здесь будет логика получения файлов из хранилища
+// getFilesContent получает содержимое файлов из хранилища
 func (h *MergeHandler) getFilesContent(fileIDs []string, renames map[string]string) ([]FileContent, error) {
 	var files []FileContent
 
-	// Заглушка - в реальной реализации здесь будет получение файлов
 	for _, id := range fileIDs {
-		// Пример: преобразование ID в имя файла для демонстрации
-		filename := fmt.Sprintf("file_%s.txt", strings.Split(id, "_")[1])
+		fileData, exists := h.storage.Get(id)
+		if !exists {
+			return nil, fmt.Errorf("file not found: %s", id)
+		}
 
-		// Применяем переименование, если указано
+		// Применяем переименование
+		filename := fileData.Filename
 		if newName, exists := renames[filename]; exists {
 			filename = newName
 		}
 
-		// Заглушка содержимого файла
-		content := fmt.Sprintf("содержимое файла %s\nЛиния 1\nЛиния 2", filename)
-
 		files = append(files, FileContent{
 			Filename: filename,
-			Content:  content,
+			Content:  fileData.Content,
 		})
 	}
 
