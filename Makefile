@@ -1,32 +1,75 @@
 # Скрипт автоматизации команд сборки и запуска
 
-# Сборка всего проекта
+
+# СБОРКА ПРИЛОЖЕНИЯ
+
 build: build-backend build-frontend
 
 # Сборка бэка
-build-backend:
+build-be:
 	docker compose build backend
 
-# Сборка фронта (установка зависимостей)
-build-frontend:
+# Сборка фронта
+build-fe:
 	docker compose run --rm frontend-dev npm install
 
-# Запуск приложения
-run:
-	docker compose up -d backend
+
+# ЗАПУСК ПРИЛОЖЕНИЯ (dev)
+
+# Полный запуск (бэк + фронт)
+run-dev:
+	docker-compose up -d
+
+# Запуск бэкенда
+run-dev-be:
+	docker-compose up -d backend
+
+# Запуск фронтенда (hot-reload)
+run-dev-ft:
+	docker-compose up -d frontend-dev
+
+
+# ПЕРЕЗАПУСК ПРИЛОЖЕНИЯ
+
+# Пересборка и запуск
+rebuild:
+	docker-compose down
+	docker-compose build
+	docker-compose up -d
+
+# Перезапуск бэкенда
+restart-be:
+	docker-compose restart backend
+
+# Перезапуск фронтенда
+restart-fe:
+	docker-compose restart frontend-dev
+
+
+# УПРАВЛЕНИЕ ПРИЛОЖЕНИЕМ
 
 # Остановка приложения
 stop:
-	docker compose down
+	docker-compose down
+
+
+# УПРАВЛЕНИЕ КОНТЕЙНЕРАМИ
+
+# Проверка состояния контейнеров
+status:
+	docker-compose ps
 
 # Полная очистка (контейнеры, тома, образы)
 clean:
-	docker compose down -v --rmi local
+	docker-compose down -v --rmi local
 
-# Запуск тестов бэка
-test-backend:
-	docker compose run --rm backend go test ./...
 
-# Просмотр логов
-logs:
-	docker compose logs -f backend
+# УПРАВЛЕНИЕ ЛОГАМИ
+
+# Просмотр логов бэкенда
+logs-be:
+	docker-compose logs -f backend
+
+# Просмотр логов фронтенда
+logs-fe:
+	docker-compose logs -f frontend-dev

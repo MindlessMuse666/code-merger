@@ -52,6 +52,7 @@ func NewServer(cfg *config.Config) *Server {
 	// Инициализация обработчиков
 	uploadHandler := handler.NewUploadHandler(cfg, fileService)
 	mergeHandler := handler.NewMergeHandler(fileService)
+	fileHandler := handler.NewFileHandler(storage)
 
 	// Маршрут для Swagger UI
 	r.Mount("/swagger", httpSwagger.WrapHandler)
@@ -59,6 +60,7 @@ func NewServer(cfg *config.Config) *Server {
 	// Регистрация маршрутов
 	r.Post("/api/upload", uploadHandler.HandleUpload)
 	r.Post("/api/merge", mergeHandler.HandleMerge)
+	r.Get("/api/file/{fileId}", fileHandler.GetFileContent)
 
 	return &Server{
 		cfg:    cfg,

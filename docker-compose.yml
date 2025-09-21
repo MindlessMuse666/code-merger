@@ -5,23 +5,34 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"  # Пробрасываем порт наружу
-    volumes:
-      - ./backend:/app              # Монтируем код бэка для разработки
-      - ./frontend:/root/static:ro  # Монтируем статические файлы фронта
+      - "8080:8080" # Проброс порта наружу
     environment:
-      - MAX_FILE_SIZE=10485760   # Максимальный размер файла (10 МБ)
-      - MAX_TOTAL_SIZE=52428800  # Максимальный общий размер (50 МБ)
-    restart: unless-stopped      # Автоматически перезапускаться при падении
+      - MAX_FILE_SIZE=10485760 # Максимальный размер файла
+      - MAX_TOTAL_SIZE=52428800 # Максимальный общий размер
+      - FILE_TTL=600 # Время жизни файлов в хранилище
+      - CLEANUP_INTERVAL=300 # Интервал очистки хранилища
+      - ALLOWED_ORIGINS=* # Разрешенные origins
+    restart: unless-stopped # Автоматически перезапускаться при падении
 
-  # Сервис для разработки фронта с горячей перезагрузкой
+  # Сервис для разработки фронта (hot-reload)
   frontend-dev:
     image: node:18-alpine
     working_dir: /app
     volumes:
-      - ./frontend:/app  # Монтируем код фронта
+      - ./frontend:/app # Монтирование кода фронта
     ports:
-      - "3000:3000"      # Порт для разработки фронта
-    command: sh -c "npm install && npm run dev"  # Устанавливаем зависимости и запускаем в dev-режиме
+      - "3000:3000" # Порт для разработки фронта
+    command: sh -c "npm install && npm run dev" # Устанавка зависимостей + запуск в dev-mode
     environment:
-      - HOST=0.0.0.0     # Разрешаем доступ с любого хоста
+      - HOST=0.0.0.0 # Разрешшить доступ с любого хоста
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Сеть для улучшения коммуникации между сервисами
+networks:
+  default:
+    name: code-merger-network
+    driver: bridge

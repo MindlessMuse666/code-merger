@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Кастомные стили для компонентов */
+.file-card {
+  transition: all 0.2s ease;
+}
+
+.file-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Анимации для drag-and-drop */
+.drag-over {
+  @apply bg-blue-light border-purple;
+}
+
+/* Стили для модального окна */
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+}
+
+/* Стили для эффекта размытия в предпросмотре */
+.blur-effect {
+  backdrop-filter: blur(8px);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 50%);
+}
+
+/* Утилитарные классы */
+.truncate-2-lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

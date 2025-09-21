@@ -1,10 +1,11 @@
 {
   "name": "code-merger-frontend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Фронтенд для приложения code-merger",
   "scripts": {
     "dev": "tailwindcss -i ./input.css -o ./style.css --watch",
-    "build": "tailwindcss -i ./input.css -o ./style.css --minify"
+    "build": "tailwindcss -i ./input.css -o ./style.css --minify",
+    "serve": "python -m http.server 8000"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",

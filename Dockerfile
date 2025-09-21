@@ -26,7 +26,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o code-merger ./cmd/server
 # Финальный этап
 FROM alpine:latest
 
-# Устанавливка HTTPS-сертификатов
+# Установка HTTPS-сертификатов
 RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
@@ -38,6 +38,10 @@ COPY --from=builder /app/docs ./docs
 
 # Создание директории для статических файлов
 RUN mkdir -p static
+
+# Копирование только собранных файлов фронта
+COPY frontend/index.html frontend/style.css frontend/app.js ./static/
+COPY frontend/utils/ ./static/utils/
 
 # Открытие порта для веб-сервера
 EXPOSE 8080
