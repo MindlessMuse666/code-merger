@@ -17,16 +17,33 @@ build-fe:
 # ЗАПУСК ПРИЛОЖЕНИЯ (dev)
 
 # Полный запуск (бэк + фронт)
-run-dev:
-	docker-compose up -d
+dev:
+	docker-compose up -d backend frontend-dev
+	@echo "Бэкенд доступен по http://localhost:8080"
+	@echo "Фронтенд с hot-reload доступен по http://localhost:3000"
 
-# Запуск бэкенда
-run-dev-be:
+# Запуск только бэка
+be:
 	docker-compose up -d backend
+	@echo "Бэкенд доступен по http://localhost:8080"
 
-# Запуск фронтенда (hot-reload)
-run-dev-ft:
+# Запуск только фронтенда
+fe:
 	docker-compose up -d frontend-dev
+	@echo "Фронтенд с hot-reload доступен по http://localhost:3000"
+
+
+# ЗАПУСК ПРИЛОЖЕНИЯ (prod)
+
+# Production сборка
+prod-build:
+	docker-compose build
+	docker-compose run --rm frontend-dev npm run build
+
+# Production запуск
+prod:
+	docker-compose up -d backend
+	@echo "Production приложение доступно по http://localhost:8080"
 
 
 # ПЕРЕЗАПУСК ПРИЛОЖЕНИЯ
@@ -37,18 +54,15 @@ rebuild:
 	docker-compose build
 	docker-compose up -d
 
-# Перезапуск бэкенда
-restart-be:
-	docker-compose restart backend
-
-# Перезапуск фронтенда
-restart-fe:
-	docker-compose restart frontend-dev
+# Полная перезагрузка
+restart:
+	docker-compose down
+	docker-compose up -d
 
 
 # УПРАВЛЕНИЕ ПРИЛОЖЕНИЕМ
 
-# Остановка приложения
+# Остановка всех сервисов
 stop:
 	docker-compose down
 
@@ -66,10 +80,10 @@ clean:
 
 # УПРАВЛЕНИЕ ЛОГАМИ
 
-# Просмотр логов бэкенда
+# Просмотр логов бэка
 logs-be:
 	docker-compose logs -f backend
 
-# Просмотр логов фронтенда
+# Просмотр логов фронта
 logs-fe:
 	docker-compose logs -f frontend-dev
