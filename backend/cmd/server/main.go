@@ -1,5 +1,4 @@
-// Main package является точкой входа приложения
-// Сожержит функцию main, которая запускает приложение
+// Package main является точкой входа приложения.
 package main
 
 import (
@@ -8,10 +7,9 @@ import (
 	"github.com/MindlessMuse666/code-merger/internal/app"
 )
 
-// main является точкой входа приложения
-// Инициализирует и запускает приложение, обрабатывает ошибки
+// main инициализирует и запускает приложение
 // @title code-merger API
-// @version 1.0.1
+// @version 1.0.2
 // @description Веб-сервис для объединения содержимого текстовых файлов в один файл с специальным форматированием.
 // @contact.name MindlessMuse666
 // @contact.email mindlessmuse.666@gmail.com

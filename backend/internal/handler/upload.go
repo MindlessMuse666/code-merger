@@ -1,19 +1,13 @@
-// Package handler предоставляет HTTP-обработчики для API-endpoints
-// Содержит логику обработки запросов загрузки и объединения файлов
+// Package handler предоставляет HTTP-обработчики для API-endpoints.
+// Содержит логику обработки запросов загрузки и объединения файлов.
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
-	"time"
-	"unicode/utf8"
-
-	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
 
 	"github.com/MindlessMuse666/code-merger/internal/config"
 	"github.com/MindlessMuse666/code-merger/internal/service"
@@ -86,7 +80,7 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 
 		// Валидация: расширения файла
 		if !isValidExtension(fileHeader.Filename) {
-			sendError(w, http.StatusUnsupportedMediaType, "unsupported file type", fmt.Sprintf("file &s has unsupported extension", fileHeader.Filename))
+			sendError(w, http.StatusUnsupportedMediaType, "unsupported file type", fmt.Sprintf("file %s has unsupported extension", fileHeader.Filename))
 			return
 		}
 
@@ -123,38 +117,4 @@ func (h *UploadHandler) processFile(fileHeader *multipart.FileHeader) (string, e
 	}
 
 	return h.fileService.ProcessFile(fileHeader.Filename, content)
-}
-
-// generateFileID гененирует уникальный ID для файла
-// TODO(временная реализация): В prod использовать uuid
-func generateFileID() string {
-	return fmt.Sprintf("file_%d", time.Now().UnixNano())
-}
-
-func convertToUTF8(content []byte) (string, error) {
-	// Попробуем декодировать из common encodings
-	encodings := map[string]transform.Transformer{
-		"windows-1251": charmap.Windows1251.NewDecoder(),
-		"ISO-8859-1":   charmap.ISO8859_1.NewDecoder(),
-		// Добавьте другие кодировки при необходимости
-	}
-
-	for _, decoder := range encodings {
-		reader := transform.NewReader(bytes.NewReader(content), decoder)
-		decoded, err := io.ReadAll(reader)
-		if err == nil && isUTF8(decoded) {
-			return string(decoded), nil
-		}
-	}
-
-	// Если не удалось декодировать, проверяем UTF-8
-	if isUTF8(content) {
-		return string(content), nil
-	}
-
-	return "", fmt.Errorf("unable to convert to UTF-8")
-}
-
-func isUTF8(content []byte) bool {
-	return utf8.Valid(content)
 }

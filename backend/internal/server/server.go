@@ -1,5 +1,5 @@
-// Package server предоставляет функциональность для создания и запуска HTTP-сервера
-// Сервер использует Chi router с middleware для логирования, восстановления и CORS
+// Package server предоставляет функциональность для создания и запуска HTTP-сервера.
+// Сервер использует Chi router с middleware для логирования, восстановления и CORS.
 package server
 
 import (
@@ -67,8 +67,6 @@ func NewServer(cfg *config.Config) *Server {
 }
 
 // Run запускает HTTP-сервер с поддержкой graceful shutdown
-// Сервер будет обрабатывать запросы до получения сигнала завершения
-// Возвращает ошибку в случае неудачного запуска или завершения
 func (s *Server) Run() error {
 	srv := &http.Server{
 		Addr:         ":" + s.cfg.Port,
