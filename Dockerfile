@@ -4,8 +4,9 @@ FROM golang:1.24.6-alpine AS builder
 # Рабочая директория
 WORKDIR /app
 
-# Устанавливка зависимостей системы + swagger docs
+# Устанавка зависимостей системы
 RUN apk add --no-cache git
+# Устанавка swag (инструмент для генерации swagger-docs)
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Копирование файлов модулей Go
@@ -16,7 +17,7 @@ RUN go mod download
 # Копирование исходного кода
 COPY backend/ ./
 
-# Генерирация Swagger-документации из аннотаций в коде
+# Генерация swagger-docs из аннотаций в коде
 RUN swag init -g cmd/server/main.go --output ./docs
 
 # Сборка приложения
@@ -32,7 +33,7 @@ WORKDIR /root/
 
 # Копирование собранного бинарника из этапа сборки
 COPY --from=builder /app/code-merger .
-# Копирование сгенерированной Swagger-документации
+# Копирование сгенерированной Swagger-docs
 COPY --from=builder /app/docs ./docs
 
 # Создание директории для статических файлов

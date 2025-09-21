@@ -34,9 +34,11 @@ func NewUploadHandler(cfg *config.Config) *UploadHandler {
 // @Summary Загрузка файлов для обработки
 // @Description Принимает один или несколько файлов для последующего объединения. Проверяет расширения и размер файлов.
 // @Tags Files
+// @Summary Загрузка файлов для обработки
+// @Description Эндпоинт принимает один или несколько текстовых файлов поддерживаемых форматов. Файлы временно сохраняются на сервере (в памяти) для последующего объединения. Возвращает уникальные идентификаторы файлов.
 // @Accept multipart/form-data
 // @Produce json
-// @Param files formData file true "Массив файлов для загрузки"
+// @Param files formData file true "Массив файлов для загрузки. Можно выбрать несколько файлов, удерживая Ctrl (Cmd на Mac) при выборе в диалоговом окне." collectionFormat="multi"
 // @Success 200 {object} UploadResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 413 {object} ErrorResponse
