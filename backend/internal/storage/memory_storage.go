@@ -1,4 +1,4 @@
-// Package storage предоставляет реализацию in-memory хранилища данных
+// Package storage предоставляет in-memory реализацию интерфейса Storage.
 package storage
 
 import (

@@ -1,4 +1,4 @@
-// Package handler объединяет утилиты (структуры и функции) для HTTP-обработчиков
+// Package handler объединяет утилиты для HTTP-обработчиков.
 package handler
 
 import (
@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"unicode"
 
 	"github.com/MindlessMuse666/code-merger/internal/utils"
 )
@@ -27,25 +26,6 @@ func sendError(w http.ResponseWriter, statusCode int, errorMsg, details string) 
 	})
 }
 
-// getCommentPrefix возвращает префикс комментария для указанного расширения файла
-func getCommentPrefix(filename string) string {
-	ext := strings.ToLower(filepath.Ext(filename))
-	base := strings.ToLower(filepath.Base(filename))
-
-	switch {
-	case base == "dockerfile" || base == "makefile":
-		return "#"
-	case ext == ".md" || ext == ".html":
-		return "<!--"
-	case ext == ".css":
-		return "/*"
-	case ext == ".js" || ext == ".go" || ext == ".cpp" || ext == ".java" || ext == ".json":
-		return "//"
-	default:
-		return "#"
-	}
-}
-
 // isValidExtension проверяет поддержку расширения файла
 func isValidExtension(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))
@@ -55,15 +35,4 @@ func isValidExtension(filename string) bool {
 	}
 
 	return utils.SupportedExtensions[ext]
-}
-
-// isTextContent валидирует, что содержимое является текстовым
-func isTextContent(content string) bool {
-	for _, r := range content {
-		// Разрешаем печатные символы, пробелы и управляющие символы
-		if !unicode.IsPrint(r) && !unicode.IsSpace(r) && r != '\t' && r != '\n' && r != '\r' {
-			return false
-		}
-	}
-	return true
 }

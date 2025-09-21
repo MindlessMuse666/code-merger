@@ -1,3 +1,5 @@
+// Package handler предоставляет HTTP-обработчики для API-endpoints.
+// Содержит логику обработки запросов загрузки и объединения файлов.
 package handler
 
 import (
@@ -18,12 +20,6 @@ type MergeRequest struct {
 	FileIDs        []string          `json:"file_ids"`
 	OutputFilename string            `json:"output_filename"`
 	FileRenames    map[string]string `json:"file_renames"`
-}
-
-// FileContent представляет содержимое файла с именем
-type FileContent struct {
-	Filename string
-	Content  string
 }
 
 // NewMergeHandler создает новый экземпляр MergeHandler

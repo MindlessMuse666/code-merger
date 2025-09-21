@@ -1,5 +1,7 @@
+// Package utils предоставляет общие утилиты и константы для приложения.
 package utils
 
+// Поддерживаемые расширения файлов
 var SupportedExtensions = map[string]bool{
 	".md": true, ".txt": true, ".yaml": true, ".yml": true,
 	".json": true, ".cpp": true, ".go": true, ".py": true,
