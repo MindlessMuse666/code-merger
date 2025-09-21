@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -57,7 +58,16 @@ func NewServer(cfg *config.Config) *Server {
 	// Маршрут для Swagger UI
 	r.Mount("/swagger", httpSwagger.WrapHandler)
 
+	workDir, _ := os.Getwd()
+	filesDir := filepath.Join(workDir, "static")
+	r.Handle("/*", http.StripPrefix("/", http.FileServer(http.Dir(filesDir))))
+
 	// Регистрация маршрутов
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "code-merger API is running", "status": "OK"}`))
+	})
 	r.Post("/api/upload", uploadHandler.HandleUpload)
 	r.Post("/api/merge", mergeHandler.HandleMerge)
 	r.Get("/api/file/{fileId}", fileHandler.GetFileContent)

@@ -1,8 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Кастомные стили для компонентов */
+@theme {
+  --color-blue-light: #a2d2ff;
+  --color-blue-lighter: #bee2ff;
+  --color-pink: #faaac7;
+  --color-pink-light: #ffc8dd;
+  --color-purple: #cdb4db;
+  --color-purple-dark: #b399cc;
+}
+
+/* Ваши кастомные стили */
 .file-card {
   transition: all 0.2s ease;
 }

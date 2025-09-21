@@ -15,4 +15,4 @@ if [ ! -f "style.css" ]; then
 fi
 
 echo "Фронтенд готов к работе!"
-echo "Запустите: docker-compose up frontend-dev"
+echo "Запустите: make run"

@@ -14,22 +14,24 @@ services:
       - ALLOWED_ORIGINS=* # Разрешенные origins
     restart: unless-stopped # Автоматически перезапускаться при падении
 
-  # Сервис для разработки фронта (hot-reload)
-  frontend-dev:
+  # Сервис для разработки фронта
+  frontend:
     image: node:18-alpine
     working_dir: /app
     volumes:
       - ./frontend:/app # Монтирование кода фронта
     ports:
-      - "3000:3000" # Порт для разработки фронта
-    command: sh -c "npm install && npm run dev" # Устанавка зависимостей + запуск в dev-mode
+      - "3001:3001" # Порт для разработки фронта
+    command: sh -c "npm install && npx @tailwindcss/cli -i ./input.css -o ./style.css --watch & npx http-server -p 3001 -a 0.0.0.0 --verbose" # Устанавка зависимостей + запуск в dev-mode
     environment:
-      - HOST=0.0.0.0 # Разрешшить доступ с любого хоста
+      - HOST=0.0.0.0 # Разрешить доступ с любого хоста
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "--spider", "http://localhost:3001"]
       interval: 30s
       timeout: 10s
       retries: 3
+    tty: true # Предотвратить остановку контейнера
+    stdin_open: true
 
 # Сеть для улучшения коммуникации между сервисами
 networks:

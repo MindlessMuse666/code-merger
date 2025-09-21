@@ -4,9 +4,9 @@ FROM golang:1.24.6-alpine AS builder
 # Рабочая директория
 WORKDIR /app
 
-# Устанавка зависимостей системы
+# Установка зависимостей системы
 RUN apk add --no-cache git
-# Устанавка swag (инструмент для генерации swagger-docs)
+# Установка swag (инструмент для генерации swagger-docs)
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Копирование файлов модулей Go
