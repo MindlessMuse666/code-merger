@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
-	"github.com/MindlessMuse666/code-merger/internal/storage"
+	"github.com/MindlessMuse666/code-merger/internal/service"
 )
 
 // MergeHandler обрабатывает объединение файлов
 type MergeHandler struct {
-	storage *storage.MemoryStorage
+	fileService *service.FileService
 }
 
 // MergeRequest представляет запрос на объединение файлов
@@ -28,9 +27,9 @@ type FileContent struct {
 }
 
 // NewMergeHandler создает новый экземпляр MergeHandler
-func NewMergeHandler(storage *storage.MemoryStorage) *MergeHandler {
+func NewMergeHandler(fileService *service.FileService) *MergeHandler {
 	return &MergeHandler{
-		storage: storage,
+		fileService: fileService,
 	}
 }
 
@@ -66,15 +65,15 @@ func (h *MergeHandler) HandleMerge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получение файлов из хранилища
-	filesContent, err := h.getFilesContent(request.FileIDs, request.FileRenames)
+	// Получение файлов через сервис
+	filesContent, err := h.fileService.GetFiles(request.FileIDs, request.FileRenames)
 	if err != nil {
 		sendError(w, http.StatusNotFound, "files not found", err.Error())
 		return
 	}
 
-	// Объединяем файлы с правильным форматированием
-	result := h.mergeFiles(filesContent)
+	// Объединяем файлы через сервис
+	result := h.fileService.MergeFiles(filesContent)
 
 	// Устанавливаем заголовки для скачивания файла
 	w.Header().Set("Content-Type", "application/octet-stream")
@@ -83,58 +82,4 @@ func (h *MergeHandler) HandleMerge(w http.ResponseWriter, r *http.Request) {
 
 	// Отправляем результат
 	w.Write([]byte(result))
-}
-
-// mergeFiles объединяет файлы с соблюдением правил форматирования
-func (h *MergeHandler) mergeFiles(files []FileContent) string {
-	var result strings.Builder
-
-	for i, file := range files {
-		// Получаем префикс комментария для файла
-		prefix := getCommentPrefix(file.Filename)
-
-		// Добавляем заголовок файла
-		if strings.Contains(prefix, "<!--") {
-			result.WriteString(fmt.Sprintf("%s %s %s\n\n", prefix, file.Filename, "-->"))
-		} else if strings.Contains(prefix, "/*") {
-			result.WriteString(fmt.Sprintf("%s%s%s\n\n", prefix, file.Filename, "*/"))
-		} else {
-			result.WriteString(fmt.Sprintf("%s %s\n\n", prefix, file.Filename))
-		}
-
-		// Добавляем содержимое файла
-		result.WriteString(file.Content)
-
-		// Добавляем разделитель между файлами (кроме последнего)
-		if i < len(files)-1 {
-			result.WriteString("\n\n\n")
-		}
-	}
-
-	return result.String()
-}
-
-// getFilesContent получает содержимое файлов из хранилища
-func (h *MergeHandler) getFilesContent(fileIDs []string, renames map[string]string) ([]FileContent, error) {
-	var files []FileContent
-
-	for _, id := range fileIDs {
-		fileData, exists := h.storage.Get(id)
-		if !exists {
-			return nil, fmt.Errorf("file not found: %s", id)
-		}
-
-		// Применяем переименование
-		filename := fileData.Filename
-		if newName, exists := renames[filename]; exists {
-			filename = newName
-		}
-
-		files = append(files, FileContent{
-			Filename: filename,
-			Content:  fileData.Content,
-		})
-	}
-
-	return files, nil
 }

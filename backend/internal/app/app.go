@@ -11,8 +11,6 @@ import (
 )
 
 // Run инициализирует и запускает приложение
-// Загружает конфиг, создает сервер и запускает его
-// Возвращает ошибку, если не удалось загрузить конфиг или запустить сервер
 func Run() error {
 	// Загрузка конфига
 	cfg, err := config.Load()
@@ -23,18 +21,18 @@ func Run() error {
 	// Создание хранилища
 	storage := storage.NewMemoryStorage()
 
-	// Запуск отчистки хранилища каждые 5 минут
+	// Запуск отчистки хранилища
 	go func() {
-		ticker := time.NewTicker(5 * time.Minute)
+		ticker := time.NewTicker(cfg.CleanupInterval)
 		defer ticker.Stop()
 
 		for range ticker.C {
-			// Удаление файлов, которые старше 10 минут
-			storage.Cleanup(10 * time.Minute)
+			// Удаление файлов, которые старше заданного в конфиге времени
+			storage.Cleanup(cfg.FileTTL)
 		}
 	}()
 
 	// Создание сервера
-	srv := server.NewServer(cfg, storage)
+	srv := server.NewServer(cfg)
 	return srv.Run()
 }

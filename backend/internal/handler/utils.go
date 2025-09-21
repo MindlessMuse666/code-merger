@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"github.com/MindlessMuse666/code-merger/internal/utils"
 )
 
 // ErrorResponse представляет структуру ошибки API
-// Используется для стандартизации JSON-ответов с ошибками
 type ErrorResponse struct {
 	Error   string `json:"error"`
 	Details string `json:"details,omitempty"`
@@ -46,7 +47,6 @@ func getCommentPrefix(filename string) string {
 }
 
 // isValidExtension проверяет поддержку расширения файла
-// TODO(дополняется): Поддерживаемые расширения: .md, .txt, .yaml, .yml, Dockerfile, Makefile, .json, .cpp, .go, .py, .html, .css, .js
 func isValidExtension(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))
 	if ext == "" {
@@ -54,13 +54,7 @@ func isValidExtension(filename string) bool {
 		return base == "dockerfile" || base == "makefile"
 	}
 
-	supported := map[string]bool{
-		".md": true, ".txt": true, ".yaml": true, ".yml": true,
-		".json": true, ".cpp": true, ".go": true, ".py": true,
-		".html": true, ".css": true, ".js": true, ".sh": true,
-	}
-
-	return supported[ext]
+	return utils.SupportedExtensions[ext]
 }
 
 // isTextContent валидирует, что содержимое является текстовым

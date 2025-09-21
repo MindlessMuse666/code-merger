@@ -16,14 +16,13 @@ import (
 	"golang.org/x/text/transform"
 
 	"github.com/MindlessMuse666/code-merger/internal/config"
-	"github.com/MindlessMuse666/code-merger/internal/storage"
+	"github.com/MindlessMuse666/code-merger/internal/service"
 )
 
-// UploadHandler обрабатывает загрузку файлов через multipart/form-data
-// Отвечает за валидацию, обработку и временное хранение загруженных файлов
+// UploadHandler обрабатывает загрузку файлов
 type UploadHandler struct {
-	cfg     *config.Config
-	storage *storage.MemoryStorage
+	cfg         *config.Config
+	fileService *service.FileService
 }
 
 // UploadResponse представляет успешный ответ на загрузку файлов
@@ -33,15 +32,14 @@ type UploadResponse struct {
 }
 
 // NewUploadHandler создает новый экземпляр UploadHandler
-// Принимает конфиг приложения и возвращает инициализированный обработчик
-func NewUploadHandler(cfg *config.Config, storage *storage.MemoryStorage) *UploadHandler {
+func NewUploadHandler(cfg *config.Config, fileService *service.FileService) *UploadHandler {
 	return &UploadHandler{
-		cfg:     cfg,
-		storage: storage,
+		cfg:         cfg,
+		fileService: fileService,
 	}
 }
 
-// HandleUpload обрабатывает загрузку файлов через multipart/form-data
+// HandleUpload обрабатывает запрос на загрузку файлов
 // @Summary Загрузка файлов для обработки
 // @Description Принимает один или несколько файлов для последующего объединения. Проверяет расширения и размер файлов.
 // @Tags Files
@@ -111,7 +109,6 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // processFile обрабатывает загруженный файл
-// TODO(временная реализация): Сейчас возвращает UUID, в будущем может сохранять файл во временное хранилище
 func (h *UploadHandler) processFile(fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -125,27 +122,7 @@ func (h *UploadHandler) processFile(fileHeader *multipart.FileHeader) (string, e
 		return "", fmt.Errorf("failed to read file content: %v", err)
 	}
 
-	// Конвертация в UTF-8
-	utf8Content, err := convertToUTF8(content)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert file to UTF-8: %v", err)
-	}
-
-	// Валидация: файл является текстовым
-	if !isTextContent(utf8Content) {
-		return "", fmt.Errorf("file appears to be binary: %s", fileHeader.Filename)
-	}
-
-	// TODO(временная реализация): Генерация уникального ID для файла
-	fileID := generateFileID()
-
-	h.storage.Store(fileID, storage.FileData{
-		Content:  utf8Content,
-		Filename: fileHeader.Filename,
-		UploadAt: time.Now(),
-	})
-
-	return fileID, nil
+	return h.fileService.ProcessFile(fileHeader.Filename, content)
 }
 
 // generateFileID гененирует уникальный ID для файла

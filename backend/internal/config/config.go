@@ -5,21 +5,25 @@ package config
 import (
 	"os"
 	"strconv"
+	"time"
 )
 
-// Config содержит настройки приложения
+// Config содержит все настраиваемые параметры приложения
 type Config struct {
-	Port         string
-	MaxFileSize  int64
-	MaxTotalSize int64
+	Port            string        `json:"port"`             // Порт сервера
+	MaxFileSize     int64         `json:"max_file_size"`    // Максимальный размер файла в байтах
+	MaxTotalSize    int64         `json:"max_total_size"`   // Максимальный общий размер в байтах
+	FileTTL         time.Duration `json:"file_ttl"`         // Время жизни файлов в хранилище
+	CleanupInterval time.Duration `json:"cleanup_interval"` // Интервал очистки хранилища
 }
 
 // Load загружает конфиг из переменных окружения
-// Возвращает ошибку, если не удалось преобразовать числовые значения
 func Load() (*Config, error) {
 	port := getEnv("PORT", "8080")
-	maxFileSizeStr := getEnv("MAX_FILE_SIZE", "10485760")
-	maxTotalSizeStr := getEnv("MAX_TOTAL_SIZE", "52428800")
+	maxFileSizeStr := getEnv("MAX_FILE_SIZE", "10485760")   // 10MB
+	maxTotalSizeStr := getEnv("MAX_TOTAL_SIZE", "52428800") // 50MB
+	fileTTLStr := getEnv("FILE_TTL", "600")                 // 10 минут в секундах
+	cleanupIntervalStr := getEnv("CLEANUP_INTERVAL", "300") // 5 минут в секундах
 
 	maxFileSize, err := strconv.ParseInt(maxFileSizeStr, 10, 64)
 	if err != nil {
@@ -31,10 +35,22 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	fileTTL, err := strconv.ParseInt(fileTTLStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	cleanupInterval, err := strconv.ParseInt(cleanupIntervalStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
-		Port:         port,
-		MaxFileSize:  maxFileSize,
-		MaxTotalSize: maxTotalSize,
+		Port:            port,
+		MaxFileSize:     maxFileSize,
+		MaxTotalSize:    maxTotalSize,
+		FileTTL:         time.Duration(fileTTL) * time.Second,
+		CleanupInterval: time.Duration(cleanupInterval) * time.Second,
 	}, nil
 }
 
