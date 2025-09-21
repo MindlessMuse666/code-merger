@@ -5,6 +5,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -15,6 +16,7 @@ type Config struct {
 	MaxTotalSize    int64         `json:"max_total_size"`   // Максимальный общий размер в байтах
 	FileTTL         time.Duration `json:"file_ttl"`         // Время жизни файлов в хранилище
 	CleanupInterval time.Duration `json:"cleanup_interval"` // Интервал очистки хранилища
+	AllowedOrigins  []string      `json:"allowed_origins"`  // Разрешенные origins для CORS
 }
 
 // Load загружает конфиг из переменных окружения
@@ -24,26 +26,28 @@ func Load() (*Config, error) {
 	maxTotalSizeStr := getEnv("MAX_TOTAL_SIZE", "52428800") // 50MB
 	fileTTLStr := getEnv("FILE_TTL", "600")                 // 10 минут в секундах
 	cleanupIntervalStr := getEnv("CLEANUP_INTERVAL", "300") // 5 минут в секундах
+	allowedOriginsStr := getEnv("ALLOWED_ORIGINS", "*")     // Разрешенные origins
 
+	// Парсинг числовых значений
 	maxFileSize, err := strconv.ParseInt(maxFileSizeStr, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-
 	maxTotalSize, err := strconv.ParseInt(maxTotalSizeStr, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-
 	fileTTL, err := strconv.ParseInt(fileTTLStr, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-
 	cleanupInterval, err := strconv.ParseInt(cleanupIntervalStr, 10, 64)
 	if err != nil {
 		return nil, err
 	}
+
+	// Парсинг разрешенных origins
+	allowedOrigins := strings.Split(allowedOriginsStr, ",")
 
 	return &Config{
 		Port:            port,
@@ -51,6 +55,7 @@ func Load() (*Config, error) {
 		MaxTotalSize:    maxTotalSize,
 		FileTTL:         time.Duration(fileTTL) * time.Second,
 		CleanupInterval: time.Duration(cleanupInterval) * time.Second,
+		AllowedOrigins:  allowedOrigins,
 	}, nil
 }
 

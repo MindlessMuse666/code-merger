@@ -1,28 +1,22 @@
 // Package service предоставляет сервисный слой для бизнес-логики приложения.
-// Содержит методы для обработки файлов, их конвертации, валидации и объединения.
+// Инкапсулирует логику обработки, валидации и преобразования файлов.
 package service
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"path/filepath"
 	"strings"
 	"time"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/MindlessMuse666/code-merger/internal/config"
 	"github.com/MindlessMuse666/code-merger/internal/storage"
-	"github.com/MindlessMuse666/code-merger/internal/utils"
-	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
 )
 
 // FileService предоставляет методы для работы с файлами
 type FileService struct {
-	cfg     *config.Config
-	storage storage.Storage
+	cfg               *config.Config
+	storage           storage.Storage
+	encodingService   *EncodingService
+	validationService *ValidationService
 }
 
 // FileContent представляет содержимое файла с именем
@@ -34,22 +28,24 @@ type FileContent struct {
 // NewFileService создает новый экземпляр FileService
 func NewFileService(cfg *config.Config, storage storage.Storage) *FileService {
 	return &FileService{
-		cfg:     cfg,
-		storage: storage,
+		cfg:               cfg,
+		storage:           storage,
+		encodingService:   NewEncodingService(),
+		validationService: NewValidationService(),
 	}
 }
 
 // ProcessFile обрабатывает загруженный файл
 func (s *FileService) ProcessFile(filename string, content []byte) (string, error) {
-	// Конвертация в UTF-8
-	utf8Content, err := s.convertToUTF8(content)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert file to UTF-8: %v", err)
+	// Валидация файла
+	if err := s.validationService.ValidateFile(filename, content, s.cfg.MaxFileSize); err != nil {
+		return "", fmt.Errorf("file validation failed: %v", err)
 	}
 
-	// Валидация текстового содержимого
-	if !s.isTextContent(utf8Content) {
-		return "", fmt.Errorf("file appears to be binary: %s", filename)
+	// Конвертация в UTF-8
+	utf8Content, err := s.encodingService.ConvertToUTF8(content)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert file to UTF-8: %v", err)
 	}
 
 	// Генерация ID файла
@@ -97,16 +93,10 @@ func (s *FileService) MergeFiles(files []FileContent) string {
 
 	for i, file := range files {
 		// Получаем префикс комментария для файла
-		prefix := s.getCommentPrefix(file.Filename)
+		prefix := s.validationService.GetCommentPrefix(file.Filename)
 
 		// Добавляем заголовок файла
-		if strings.Contains(prefix, "<!--") {
-			result.WriteString(fmt.Sprintf("%s %s %s\n\n", prefix, file.Filename, "-->"))
-		} else if strings.Contains(prefix, "/*") {
-			result.WriteString(fmt.Sprintf("%s%s%s\n\n", prefix, file.Filename, "*/"))
-		} else {
-			result.WriteString(fmt.Sprintf("%s %s\n\n", prefix, file.Filename))
-		}
+		result.WriteString(s.formatFileHeader(prefix, file.Filename))
 
 		// Добавляем содержимое файла
 		result.WriteString(file.Content)
@@ -120,63 +110,16 @@ func (s *FileService) MergeFiles(files []FileContent) string {
 	return result.String()
 }
 
-// convertToUTF8 конвертирует содержимое файла в UTF-8
-func (s *FileService) convertToUTF8(content []byte) (string, error) {
-	// Попробуем декодировать из common encodings
-	encodings := map[string]transform.Transformer{
-		"windows-1251": charmap.Windows1251.NewDecoder(),
-		"ISO-8859-1":   charmap.ISO8859_1.NewDecoder(),
+// formatFileHeader форматирует заголовок файла в соответствии с префиксом комментария
+func (s *FileService) formatFileHeader(prefix, filename string) string {
+	switch {
+	case strings.Contains(prefix, "<!--"):
+		return fmt.Sprintf("%s %s %s\n\n", prefix, filename, "-->")
+	case strings.Contains(prefix, "/*"):
+		return fmt.Sprintf("%s%s%s\n\n", prefix, filename, "*/")
+	default:
+		return fmt.Sprintf("%s %s\n\n", prefix, filename)
 	}
-
-	for _, decoder := range encodings {
-		reader := transform.NewReader(bytes.NewReader(content), decoder)
-		decoded, err := io.ReadAll(reader)
-		if err == nil && s.isUTF8(decoded) {
-			return string(decoded), nil
-		}
-	}
-
-	// Если не удалось декодировать, проверяем UTF-8
-	if s.isUTF8(content) {
-		return string(content), nil
-	}
-
-	return "", fmt.Errorf("unable to convert to UTF-8")
-}
-
-// isUTF8 проверяет, является ли содержимое валидным UTF-8
-func (s *FileService) isUTF8(content []byte) bool {
-	return utf8.Valid(content)
-}
-
-// isTextContent валидирует, что содержимое является текстовым
-func (s *FileService) isTextContent(content string) bool {
-	for _, r := range content {
-		// Разрешаем печатные символы, пробелы и управляющие символы
-		if !unicode.IsPrint(r) && !unicode.IsSpace(r) && r != '\t' && r != '\n' && r != '\r' {
-			return false
-		}
-	}
-	return true
-}
-
-// getCommentPrefix возвращает префикс комментария для указанного файла
-func (s *FileService) getCommentPrefix(filename string) string {
-	ext := strings.ToLower(filepath.Ext(filename))
-	base := strings.ToLower(filepath.Base(filename))
-
-	// Проверяем специальные случаи (Dockerfile, Makefile)
-	if base == "dockerfile" || base == "makefile" {
-		return utils.CommentPrefixes[base]
-	}
-
-	// Проверяем расширение файла
-	if prefix, exists := utils.CommentPrefixes[ext]; exists {
-		return prefix
-	}
-
-	// Возвращаем префикс по умолчанию
-	return utils.DefaultCommentPrefix
 }
 
 // generateFileID генерирует уникальный ID для файла

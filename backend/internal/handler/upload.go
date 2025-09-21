@@ -52,7 +52,11 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, h.cfg.MaxTotalSize)
 
 	if err := r.ParseMultipartForm(h.cfg.MaxTotalSize); err != nil {
-		sendError(w, http.StatusBadRequest, "failed to parse multipart form", err.Error())
+		if err.Error() == "http: request body too large" {
+			sendError(w, http.StatusRequestEntityTooLarge, "request too large", "total request size exceeds limit")
+		} else {
+			sendError(w, http.StatusBadRequest, "failed to parse multipart form", err.Error())
+		}
 		return
 	}
 
@@ -68,36 +72,41 @@ func (h *UploadHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	for _, fileHeader := range files {
 		// Валидация: размер файла
 		if fileHeader.Size > h.cfg.MaxFileSize {
-			sendError(w, http.StatusRequestEntityTooLarge, "file too large", fmt.Sprintf("file %s exceeds maximum size limit", fileHeader.Filename))
+			sendError(w, http.StatusRequestEntityTooLarge, "file too large",
+				fmt.Sprintf("file %s exceeds maximum size limit of %d bytes",
+					fileHeader.Filename, h.cfg.MaxFileSize))
 			return
 		}
 
 		totalSize += fileHeader.Size
 		if totalSize > h.cfg.MaxTotalSize {
-			sendError(w, http.StatusRequestEntityTooLarge, "total size exceeded", "total size of all files exceeds limit")
+			sendError(w, http.StatusRequestEntityTooLarge, "total size exceeded",
+				fmt.Sprintf("total size of all files exceeds limit of %d bytes", h.cfg.MaxTotalSize))
 			return
 		}
 
 		// Валидация: расширения файла
 		if !isValidExtension(fileHeader.Filename) {
-			sendError(w, http.StatusUnsupportedMediaType, "unsupported file type", fmt.Sprintf("file %s has unsupported extension", fileHeader.Filename))
+			sendError(w, http.StatusUnsupportedMediaType, "unsupported file type",
+				fmt.Sprintf("file %s has unsupported extension", fileHeader.Filename))
 			return
 		}
 
 		// Обработка файла
-		fileId, err := h.processFile(fileHeader)
+		fileID, err := h.processFile(fileHeader)
 		if err != nil {
 			sendError(w, http.StatusInternalServerError, "failed to process file", err.Error())
 			return
 		}
 
-		fileIDs = append(fileIDs, fileId)
+		fileIDs = append(fileIDs, fileID)
 	}
 
 	// Возврат успешного ответа
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(UploadResponse{
-		Message: "files uploaded successfully",
+		Message: fmt.Sprintf("%d files uploaded successfully", len(fileIDs)),
 		FileIDs: fileIDs,
 	})
 }
