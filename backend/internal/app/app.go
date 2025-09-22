@@ -19,7 +19,7 @@ func Run() error {
 		return err
 	}
 
-	// Создание хранилища
+	// Создание хранилища и сервиса
 	storage := storage.NewMemoryStorage()
 	fileService := service.NewFileService(cfg, storage)
 

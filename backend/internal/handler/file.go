@@ -5,19 +5,19 @@ package handler
 import (
 	"net/http"
 
-	"github.com/MindlessMuse666/code-merger/internal/storage"
+	"github.com/MindlessMuse666/code-merger/internal/service"
 	"github.com/go-chi/chi/v5"
 )
 
 // FileHandler обрабатывает запросы к отдельным файлам
 type FileHandler struct {
-	storage storage.Storage
+	fileService *service.FileService
 }
 
 // NewFileHandler создает новый экземпляр FileHandler
-func NewFileHandler(storage storage.Storage) *FileHandler {
+func NewFileHandler(fileService *service.FileService) *FileHandler {
 	return &FileHandler{
-		storage: storage,
+		fileService: fileService,
 	}
 }
 
@@ -33,9 +33,9 @@ func NewFileHandler(storage storage.Storage) *FileHandler {
 func (h *FileHandler) GetFileContent(w http.ResponseWriter, r *http.Request) {
 	fileID := chi.URLParam(r, "fileId")
 
-	fileData, exists := h.storage.Get(fileID)
-	if !exists {
-		sendError(w, http.StatusNotFound, "file not found", "file with the specified ID was not found")
+	fileData, err := h.fileService.GetFileByID(fileID)
+	if err != nil {
+		sendError(w, http.StatusNotFound, "file not found", err.Error())
 		return
 	}
 

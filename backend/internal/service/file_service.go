@@ -62,13 +62,26 @@ func (s *FileService) ProcessFile(filename string, content []byte) (string, erro
 	return fileID, nil
 }
 
+// GetFileByID возвращает файл по его ID
+func (s *FileService) GetFileByID(fileID string) (storage.FileData, error) {
+	fileData, exists := s.storage.Get(fileID)
+	if !exists {
+		return storage.FileData{}, fmt.Errorf("file not found: %s", fileID)
+	}
+	return fileData, nil
+}
+
 // GetFiles возвращает файлы по их ID
 func (s *FileService) GetFiles(fileIDs []string, renames map[string]string) ([]FileContent, error) {
+	if len(fileIDs) == 0 {
+		return nil, fmt.Errorf("no file IDs provided")
+	}
+
 	var files []FileContent
 
 	for _, id := range fileIDs {
-		fileData, exists := s.storage.Get(id)
-		if !exists {
+		fileData, err := s.GetFileByID(id)
+		if err != nil {
 			return nil, fmt.Errorf("file not found: %s", id)
 		}
 
@@ -82,6 +95,10 @@ func (s *FileService) GetFiles(fileIDs []string, renames map[string]string) ([]F
 			Filename: filename,
 			Content:  fileData.Content,
 		})
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no valid files found")
 	}
 
 	return files, nil
