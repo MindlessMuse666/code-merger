@@ -4,9 +4,7 @@
  */
 
 // Базовый URL API определяется в зависимости от окружения
-const API_BASE_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:8080/api'
-    : '/api';
+const API_BASE_URL = '/api';
 
 /**
  * Загружает файлы на сервер
@@ -24,18 +22,22 @@ export async function uploadFiles(files) {
     try {
         const response = await fetch(`${API_BASE_URL}/upload`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'include'
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.details || 'Ошибка загрузки файлов');
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
-        return await response.json();
+        const result = await response.json();
+        console.log('Upload response:', result);
+
+        return result.file_ids || [];
     } catch (error) {
         console.error('Upload error:', error);
-        throw new Error('Не удалось загрузить файлы. Проверьте подключение к серверу.');
+        throw new Error(`Не удалось загрузить файлы: ${error.message}`);
     }
 }
 

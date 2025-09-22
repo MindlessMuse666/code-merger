@@ -7,6 +7,7 @@ import (
 
 	"github.com/MindlessMuse666/code-merger/internal/config"
 	"github.com/MindlessMuse666/code-merger/internal/server"
+	"github.com/MindlessMuse666/code-merger/internal/service"
 	"github.com/MindlessMuse666/code-merger/internal/storage"
 )
 
@@ -20,6 +21,7 @@ func Run() error {
 
 	// Создание хранилища
 	storage := storage.NewMemoryStorage()
+	fileService := service.NewFileService(cfg, storage)
 
 	// Запуск отчистки хранилища
 	go func() {
@@ -33,6 +35,6 @@ func Run() error {
 	}()
 
 	// Создание сервера
-	srv := server.NewServer(cfg)
+	srv := server.NewServer(cfg, storage, fileService)
 	return srv.Run()
 }

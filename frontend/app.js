@@ -69,7 +69,11 @@ class App {
      * @param {FileList} files - Список файлов для обработки
      */
     async handleFiles(files) {
+        console.log('Полученные файлы:', files);
+        console.log('Массив файлов:', Array.from(files));
+
         const validFiles = Array.from(files).filter(validateFile);
+        console.log('Валидные файлы:', validFiles);
 
         if (validFiles.length === 0) {
             showNotification('Нет подходящих файлов для загрузки', 'error');
@@ -80,12 +84,16 @@ class App {
         ProgressBar.show();
 
         try {
-            const uploadResults = await uploadFiles(validFiles);
+            const fileIds = await uploadFiles(validFiles);
+
+            if (!fileIds || !Array.isArray(fileIds)) {
+                throw new Error('Некорректный ответ от сервера');
+            }
 
             // Добавляем файлы в состояние приложения
-            uploadResults.forEach((result, index) => {
+            fileIds.forEach((fileId, index) => {
                 const file = validFiles[index];
-                this.files.set(result.fileId, {
+                this.files.set(fileId, {
                     file,
                     originalName: file.name,
                     customName: file.name,
@@ -98,8 +106,8 @@ class App {
             showNotification(`Загружено ${validFiles.length} файлов`, 'success');
 
         } catch (error) {
+            console.error('Upload error details:', error);
             showNotification('Ошибка при загрузке файлов', 'error');
-            console.error('Upload error:', error);
         } finally {
             ProgressBar.hide();
         }
@@ -137,16 +145,18 @@ class App {
      * @param {string} fileId - ID файла для предпросмотра
      */
     async handlePreview(fileId) {
-        const fileData = this.files.get(fileId);
-        if (!fileData) return;
-
         try {
-            // Здесь будет логика получения содержимого файла
-            // Пока используем заглушку
-            const content = "Содержимое файла будет загружено при реализации бэкенда";
-            PreviewModal.show(fileData.customName, content);
+            const content = await getFileContent(fileId);
+            
+            // Ограничиваем предпросмотр 500 символами
+            const previewContent = content.length > 500 
+                ? content.substring(0, 500) + "... [содержимое обрезано]"
+                : content;
+                
+            PreviewModal.show(this.files.get(fileId).customName, previewContent);
         } catch (error) {
             showNotification('Ошибка при загрузке содержимого файла', 'error');
+            console.error('Preview error:', error);
         }
     }
 

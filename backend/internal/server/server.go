@@ -26,12 +26,14 @@ import (
 
 // Server предоставляет HTTP-сервер приложения
 type Server struct {
-	cfg    *config.Config // Конфиг сервера
-	router *chi.Mux       // HTTP-роутер
+	cfg         *config.Config       // Конфиг сервера
+	storage     storage.Storage      // Хранилище данных
+	fileService *service.FileService // Сервис управления файлами
+	router      *chi.Mux             // HTTP-роутер
 }
 
 // NewServer создает новый экземпляр HTTP-сервера
-func NewServer(cfg *config.Config) *Server {
+func NewServer(cfg *config.Config, storage storage.Storage, fileService *service.FileService) *Server {
 	r := chi.NewRouter()
 
 	// Настройка middleware
@@ -42,13 +44,9 @@ func NewServer(cfg *config.Config) *Server {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-
-	// Инициализация хранилища и сервисов
-	storage := storage.NewMemoryStorage()
-	fileService := service.NewFileService(cfg, storage)
 
 	// Инициализация обработчиков
 	uploadHandler := handler.NewUploadHandler(cfg, fileService)

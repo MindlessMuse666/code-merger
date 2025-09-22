@@ -22,11 +22,11 @@ type Config struct {
 // Load загружает конфиг из переменных окружения
 func Load() (*Config, error) {
 	port := getEnv("PORT", "8080")
-	maxFileSizeStr := getEnv("MAX_FILE_SIZE", "10485760")   // 10MB
-	maxTotalSizeStr := getEnv("MAX_TOTAL_SIZE", "52428800") // 50MB
-	fileTTLStr := getEnv("FILE_TTL", "600")                 // 10 минут в секундах
-	cleanupIntervalStr := getEnv("CLEANUP_INTERVAL", "300") // 5 минут в секундах
-	allowedOriginsStr := getEnv("ALLOWED_ORIGINS", "*")     // Разрешенные origins
+	maxFileSizeStr := getEnv("MAX_FILE_SIZE", "10485760")                                                                // 10MB
+	maxTotalSizeStr := getEnv("MAX_TOTAL_SIZE", "52428800")                                                              // 50MB
+	fileTTLStr := getEnv("FILE_TTL", "600")                                                                              // 10 минут в секундах
+	cleanupIntervalStr := getEnv("CLEANUP_INTERVAL", "300")                                                              // 5 минут в секундах
+	allowedOriginsStr := getEnv("ALLOWED_ORIGINS", "http://localhost:3001,http://172.19.0.3:3001,http://127.0.0.1:3001") // Разрешенные origins
 
 	// Парсинг числовых значений
 	maxFileSize, err := strconv.ParseInt(maxFileSizeStr, 10, 64)

@@ -53,6 +53,11 @@ export function isWithinSizeLimit(file) {
  * @returns {boolean} True если файл валиден
  */
 export function validateFile(file) {
+    if (!file || !file.name) {
+        console.warn('Invalid file object:', file);
+        return false;
+    }
+    
     return isSupportedExtension(file.name) && isWithinSizeLimit(file);
 }
 
