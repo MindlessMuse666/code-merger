@@ -84,16 +84,19 @@ export async function mergeFiles({ file_ids, output_filename, file_renames = {} 
  */
 export async function getFileContent(fileId) {
     try {
+        console.log('Fetching file content for ID:', fileId);
         const response = await fetch(`${API_BASE_URL}/file/${fileId}`);
-        
+
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.details || 'Ошибка получения содержимого файла');
+            throw new Error(error.details || `Ошибка получения содержимого файла: ${response.status}`);
         }
 
-        return await response.text();
+        const content = await response.text();
+        console.log('File content received, length:', content.length);
+        return content;
     } catch (error) {
         console.error('Get file content error:', error);
-        throw new Error('Не удалось получить содержимое файла. Проверьте подключение к серверу.');
+        throw new Error(`Не удалось получить содержимое файла: ${error.message}`);
     }
 }

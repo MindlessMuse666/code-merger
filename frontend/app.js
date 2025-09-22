@@ -7,7 +7,7 @@
 import FileCard from './components/FileCard.js';
 import PreviewModal from './components/PreviewModal.js';
 import ProgressBar from './components/ProgressBar.js';
-import { uploadFiles, mergeFiles } from './utils/api.js';
+import { uploadFiles, mergeFiles, getFileContent } from './utils/api.js';
 import { setupDragAndDrop } from './utils/dragDrop.js';
 import { showNotification } from './utils/animations.js';
 import { validateFile } from './utils/validators.js';
@@ -19,6 +19,9 @@ class App {
     constructor() {
         this.files = new Map();
         this.renames = new Map();
+        this.fileOrder = [];
+        this.sortableInstance = null;
+        this.previewModal = new PreviewModal();
         this.init();
     }
 
@@ -145,18 +148,40 @@ class App {
      * @param {string} fileId - ID файла для предпросмотра
      */
     async handlePreview(fileId) {
+        console.log('handlePreview called for fileId:', fileId);
+
+        const fileData = this.files.get(fileId);
+        if (!fileData) {
+            showNotification('Файл не найден', 'error');
+            return;
+        }
+
+        // Валидация: инициализировано ли модальное окно
+        if (!this.previewModal.isReady()) {
+            console.warn('PreviewModal not ready, initializing...');
+            this.previewModal.init();
+        }
+
+        ProgressBar.show('Загрузка содержимого файла...');
+
         try {
+            // Получение содержимого файла с сервера
             const content = await getFileContent(fileId);
-            
-            // Ограничиваем предпросмотр 500 символами
-            const previewContent = content.length > 500 
-                ? content.substring(0, 500) + "... [содержимое обрезано]"
+            console.log('File content loaded, length:', content.length);
+
+            // Ограничение предпросмотра (пока что 500 символов)
+            const previewContent = content.length > 500
+                ? content.substring(0, 500) + "\n\n... [содержимое обрезано для предпросмотра]"
                 : content;
-                
-            PreviewModal.show(this.files.get(fileId).customName, previewContent);
+
+            // Показ модального окна
+            this.previewModal.show(fileData.customName, previewContent);
+
         } catch (error) {
-            showNotification('Ошибка при загрузке содержимого файла', 'error');
             console.error('Preview error:', error);
+            showNotification('Ошибка при загрузке содержимого файла', 'error');
+        } finally {
+            ProgressBar.hide();
         }
     }
 
@@ -189,7 +214,7 @@ class App {
         ProgressBar.show();
 
         try {
-            const fileIds = Array.from(this.files.keys());
+            const fileIds = this.fileOrder || Array.from(this.files.keys());
             const renamesObject = Object.fromEntries(this.renames);
 
             const result = await mergeFiles({
@@ -198,8 +223,8 @@ class App {
                 file_renames: renamesObject
             });
 
-            // Создаем ссылку для скачивания
-            const blob = new Blob([result], { type: 'application/octet-stream' });
+            // Создание ссылки для скачивания
+            const blob = new Blob([result], { type: 'application/octet-stream; charset=utf-8' });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
@@ -226,8 +251,20 @@ class App {
      */
     updateUIState() {
         const hasFiles = this.files.size > 0;
-        document.getElementById('filesContainer').classList.toggle('hidden', !hasFiles);
-        document.getElementById('controlPanel').classList.toggle('hidden', !hasFiles);
+        const filesContainer = document.getElementById('filesContainer');
+        const controlPanel = document.getElementById('controlPanel');
+
+        // Управление видимостью (через добавление/удаление классов)
+        if (hasFiles) {
+            filesContainer.classList.remove('hidden');
+            filesContainer.classList.add('grid');
+            controlPanel.classList.remove('hidden');
+        } else {
+            filesContainer.classList.add('hidden');
+            filesContainer.classList.remove('grid');
+            controlPanel.classList.add('hidden');
+        }
+
         document.getElementById('mergeButton').disabled = !hasFiles;
     }
 
@@ -239,25 +276,43 @@ class App {
         const filesList = document.getElementById('filesList');
         filesList.innerHTML = '';
 
-        this.files.forEach((fileData, fileId) => {
-            const fileCard = new FileCard({
-                fileId,
-                fileName: fileData.customName,
-                originalName: fileData.originalName,
-                onRename: (newName) => this.handleRename(fileId, newName),
-                onRemove: () => this.handleRemove(fileId),
-                onPreview: () => this.handlePreview(fileId)
-            });
+        // Сохранение текущего порядка перед перерисовкой
+        const currentOrder = this.fileOrder.length > 0
+            ? this.fileOrder
+            : Array.from(this.files.keys());
 
-            filesList.appendChild(fileCard.render());
+        // Рендер файлов в правильном порядке
+        currentOrder.forEach(fileId => {
+            if (this.files.has(fileId)) {
+                const fileData = this.files.get(fileId);
+                const fileCard = new FileCard({
+                    fileId,
+                    fileName: fileData.customName,
+                    originalName: fileData.originalName,
+                    onRename: (newName) => this.handleRename(fileId, newName),
+                    onRemove: () => this.handleRemove(fileId),
+                    onPreview: () => this.handlePreview(fileId)
+                });
+
+                filesList.appendChild(fileCard.render());
+            }
         });
 
-        // Инициализируем Sortable.js для перетаскивания
+        // Инициализация Sortable.js для перетаскивания
         if (this.files.size > 0) {
-            new Sortable(filesList, {
+            if (this.sortableInstance) {
+                this.sortableInstance.destroy();
+            }
+
+            this.sortableInstance = new Sortable(filesList, {
                 animation: 150,
                 ghostClass: 'bg-blue-light',
-                onEnd: () => this.updateFileOrder()
+                filter: '.preview-btn, .rename-btn, .remove-btn',
+                preventOnFilter: false,
+                onEnd: (evt) => {
+                    console.log('Drag ended, old index:', evt.oldIndex, 'new index:', evt.newIndex);
+                    this.updateFileOrder();
+                }
             });
         }
     }
@@ -267,9 +322,27 @@ class App {
      * @private
      */
     updateFileOrder() {
-        // Здесь будет логика обновления порядка файлов
-        // Пока просто перерисовываем карточки
-        this.renderFileCards();
+        const filesList = document.getElementById('filesList');
+        const fileCards = Array.from(filesList.querySelectorAll('[data-file-id]'));
+        const newOrder = fileCards.map(card => card.dataset.fileId);
+
+        // Валидация: порядок изменился
+        if (JSON.stringify(newOrder) !== JSON.stringify(this.fileOrder)) {
+            const reorderedFiles = new Map();
+
+            newOrder.forEach(fileId => {
+                if (this.files.has(fileId)) {
+                    reorderedFiles.set(fileId, this.files.get(fileId));
+                }
+            });
+
+            // Обновление состояния
+            this.files = reorderedFiles;
+            this.fileOrder = newOrder;
+
+            console.log('Порядок файлов обновлен:', this.fileOrder);
+            showNotification('Порядок файлов обновлён', 'success');
+        }
     }
 
     /**

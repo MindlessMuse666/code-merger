@@ -9,9 +9,15 @@
   --color-purple-dark: #b399cc;
 }
 
-/* Ваши кастомные стили */
+
+/* Карточки файлов */
+
 .file-card {
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+}
+
+.file-card:active {
+  transform: scale(0.98);
 }
 
 .file-card:hover {
@@ -19,23 +25,79 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Анимации для drag-and-drop */
+
+/* Кнопки действий файлов */
+
+.file-actions {
+  opacity: 1 !important;
+}
+
+.file-actions button {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.file-actions button:hover {
+  transform: scale(1.1);
+  border-color: var(--color-purple);
+  background-color: var(--color-blue-lighter);
+}
+
+
+/* Иконки */
+
+.preview-btn:hover svg,
+.rename-btn:hover svg {
+  stroke-width: 2.5;
+}
+
+.remove-btn:hover svg {
+  stroke-width: 2.5;
+}
+
+
+/* Drag-and-Drop */
+
+.drag-handle {
+  transition: all 0.2s ease;
+}
+
 .drag-over {
   @apply bg-blue-light border-purple;
 }
 
-/* Стили для модального окна */
+
+/* Курсор */
+
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+.active\:cursor-grabbing:active {
+  cursor: grabbing;
+}
+
+
+/* Модальное окно */
+
 .modal-backdrop {
   backdrop-filter: blur(4px);
 }
 
-/* Стили для эффекта размытия в предпросмотре */
+
+/* Блюр в предпросмотре */
 .blur-effect {
   backdrop-filter: blur(8px);
   mask-image: linear-gradient(to bottom, transparent 0%, black 50%);
 }
 
+
 /* Утилитарные классы */
+
 .truncate-2-lines {
   display: -webkit-box;
   -webkit-line-clamp: 2;

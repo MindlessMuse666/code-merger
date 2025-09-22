@@ -10,6 +10,8 @@ class PreviewModal {
     constructor() {
         this.modal = null;
         this.isOpen = false;
+        this.isInitialized = false;
+        console.log('PreviewModal constructor called');
         this.init();
     }
 
@@ -18,8 +20,15 @@ class PreviewModal {
      * @private
      */
     init() {
-        this.createModal();
-        this.setupEventListeners();
+        try {
+            console.log('Initializing PreviewModal...');
+            this.createModal();
+            this.setupEventListeners();
+            this.isInitialized = true;
+            console.log('PreviewModal initialized successfully');
+        } catch (error) {
+            console.error('Error initializing PreviewModal:', error);
+        }
     }
 
     /**
@@ -27,10 +36,18 @@ class PreviewModal {
      * @private
      */
     createModal() {
+        // Проверяем, не создано ли модальное окно уже
+        if (document.getElementById('previewModal')) {
+            this.modal = document.getElementById('previewModal');
+            console.log('Using existing modal');
+            return;
+        }
+
         this.modal = document.createElement('div');
+        this.modal.id = 'previewModal'; // Добавляем ID для легкого поиска
         this.modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
         this.modal.innerHTML = `
-            <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-3/4 overflow-hidden animate__animated animate__zoomIn">
+            <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-3/4 overflow-hidden">
                 <div class="modal-header bg-purple text-white px-4 py-3 flex justify-between items-center">
                     <h3 class="text-lg font-semibold truncate" id="previewModalTitle">Предпросмотр файла</h3>
                     <button class="close-btn text-white hover:text-gray-200 transition-colors">
@@ -41,7 +58,7 @@ class PreviewModal {
                 </div>
                 <div class="modal-body p-4 overflow-y-auto max-h-96">
                     <div class="content-container relative">
-                        <pre class="text-sm whitespace-pre-wrap break-words" id="previewContent"></pre>
+                        <pre class="text-sm whitespace-pre-wrap break-words" id="previewContent">Загрузка содержимого...</pre>
                         <div class="blur-effect absolute inset-0 bg-gradient-to-t from-white to-transparent opacity-0 pointer-events-none"></div>
                     </div>
                 </div>
@@ -55,6 +72,7 @@ class PreviewModal {
         `;
 
         document.body.appendChild(this.modal);
+        console.log('Modal created and added to DOM');
     }
 
     /**
@@ -62,29 +80,50 @@ class PreviewModal {
      * @private
      */
     setupEventListeners() {
-        // Закрытие по кнопке
-        this.modal.querySelector('.close-btn').addEventListener('click', () => {
-            this.hide();
-        });
+        if (!this.modal) {
+            console.error('Cannot setup event listeners: modal is null');
+            return;
+        }
 
-        // Закрытие по клику вне окна
-        this.modal.addEventListener('click', (e) => {
-            if (e.target === this.modal) {
-                this.hide();
+        try {
+            // Закрытие по кнопке
+            const closeBtn = this.modal.querySelector('.close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    console.log('Close button clicked');
+                    this.hide();
+                });
             }
-        });
 
-        // Закрытие по Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) {
-                this.hide();
+            // Закрытие по клику вне окна
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) {
+                    console.log('Background clicked');
+                    this.hide();
+                }
+            });
+
+            // Закрытие по Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.isOpen) {
+                    console.log('Escape key pressed');
+                    this.hide();
+                }
+            });
+
+            // Копирование содержимого
+            const copyBtn = this.modal.querySelector('.copy-btn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    console.log('Copy button clicked');
+                    this.copyContent();
+                });
             }
-        });
 
-        // Копирование содержимого
-        this.modal.querySelector('.copy-btn').addEventListener('click', () => {
-            this.copyContent();
-        });
+            console.log('Event listeners setup completed');
+        } catch (error) {
+            console.error('Error setting up event listeners:', error);
+        }
     }
 
     /**
@@ -93,33 +132,82 @@ class PreviewModal {
      * @param {string} content - Содержимое файла
      */
     show(fileName, content) {
-        this.isOpen = true;
+        console.log('PreviewModal.show called with:', { fileName, contentLength: content?.length });
 
-        // Устанавливаем заголовок
-        this.modal.querySelector('#previewModalTitle').textContent = `Предпросмотр: ${fileName}`;
+        if (!this.isInitialized) {
+            console.warn('PreviewModal not initialized, trying to init...');
+            this.init();
+        }
 
-        // Устанавливаем содержимое
-        const contentElement = this.modal.querySelector('#previewContent');
-        contentElement.textContent = content;
+        if (!this.modal) {
+            console.error('Cannot show modal: modal element is null');
+            return;
+        }
 
-        // Обновляем статистику
-        this.updateStats(content.length);
+        try {
+            this.isOpen = true;
 
-        // Применяем эффект размытия если контент слишком длинный
-        this.applyBlurEffect(content.length);
+            // Установка заголовка
+            const titleElement = this.modal.querySelector('#previewModalTitle');
+            if (titleElement) {
+                titleElement.textContent = `Предпросмотр: ${fileName}`;
+            }
 
-        // Показываем модальное окно
-        this.modal.classList.remove('hidden');
-        this.modal.classList.add('animate__zoomIn');
+            // Установка содержимого
+            const contentElement = this.modal.querySelector('#previewContent');
+            if (contentElement) {
+                contentElement.textContent = content || 'Содержимое недоступно';
+            }
+
+            // Обновление статистики
+            this.updateStats(content?.length || 0);
+
+            // Применение эффекта размытия, если контент слишком длинный
+            this.applyBlurEffect(content?.length || 0);
+
+            // Показ модального окна - удаляем hidden, добавляем flex для правильного отображения
+            this.modal.classList.remove('hidden');
+            this.modal.classList.add('flex'); // Добавляем flex для центрирования
+
+            // Анимация
+            setTimeout(() => {
+                this.modal.querySelector('.bg-white').classList.add('animate__animated', 'animate__zoomIn');
+            }, 10);
+
+            console.log('Modal shown successfully');
+        } catch (error) {
+            console.error('Error showing modal:', error);
+        }
     }
 
     /**
      * Скрывает модальное окно
      */
     hide() {
-        this.isOpen = false;
-        this.modal.classList.add('hidden');
-        this.modal.classList.remove('animate__zoomIn');
+        console.log('PreviewModal.hide called');
+
+        if (!this.modal) {
+            console.warn('Cannot hide modal: modal element is null');
+            return;
+        }
+
+        try {
+            this.isOpen = false;
+
+            // Убираем анимацию
+            const modalContent = this.modal.querySelector('.bg-white');
+            if (modalContent) {
+                modalContent.classList.remove('animate__animated', 'animate__zoomIn');
+            }
+
+            // Скрываем модальное окно
+            this.modal.classList.add('hidden');
+            this.modal.classList.remove('flex');
+
+            console.log('Modal hidden successfully');
+        } catch (error) {
+            console.error('Error hiding modal:', error);
+        }
     }
 
     /**
@@ -129,12 +217,14 @@ class PreviewModal {
      */
     updateStats(length) {
         const statsElement = this.modal.querySelector('#previewStats');
-        statsElement.textContent = `${length}/500 символов`;
+        if (statsElement) {
+            statsElement.textContent = `${length}/500 символов`;
 
-        if (length > 500) {
-            statsElement.classList.add('text-red-500');
-        } else {
-            statsElement.classList.remove('text-red-500');
+            if (length > 500) {
+                statsElement.classList.add('text-red-500');
+            } else {
+                statsElement.classList.remove('text-red-500');
+            }
         }
     }
 
@@ -145,10 +235,18 @@ class PreviewModal {
      */
     applyBlurEffect(length) {
         const blurElement = this.modal.querySelector('.blur-effect');
-        if (length > 500) {
-            blurElement.classList.remove('opacity-0');
-        } else {
-            blurElement.classList.add('opacity-0');
+        const contentElement = this.modal.querySelector('#previewContent');
+
+        if (blurElement && contentElement) {
+            if (length > 500) {
+                blurElement.classList.remove('opacity-0');
+                contentElement.style.maxHeight = '300px';
+                contentElement.style.overflowY = 'auto';
+            } else {
+                blurElement.classList.add('opacity-0');
+                contentElement.style.maxHeight = 'none';
+                contentElement.style.overflowY = 'visible';
+            }
         }
     }
 
@@ -157,8 +255,8 @@ class PreviewModal {
      * @private
      */
     async copyContent() {
-        const content = this.modal.querySelector('#previewContent').textContent;
         try {
+            const content = this.modal.querySelector('#previewContent').textContent;
             await navigator.clipboard.writeText(content);
             this.showNotification('Содержимое скопировано в буфер обмена', 'success');
         } catch (error) {
@@ -174,21 +272,34 @@ class PreviewModal {
      * @private
      */
     showNotification(message, type) {
-        // Временная реализация - можно интегрировать с общей системой уведомлений
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white ${type === 'success' ? 'bg-green-500' :
-                type === 'error' ? 'bg-red-500' : 'bg-yellow-500'
-            } animate__animated animate__fadeInDown`;
-        notification.textContent = message;
+        try {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-60 ${type === 'success' ? 'bg-green-500' :
+                    type === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+                } animate__animated animate__fadeInDown`;
+            notification.textContent = message;
 
-        document.body.appendChild(notification);
+            document.body.appendChild(notification);
 
-        setTimeout(() => {
-            notification.classList.add('animate__fadeOutUp');
             setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 500);
-        }, 3000);
+                notification.classList.add('animate__fadeOutUp');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }, 3000);
+        } catch (error) {
+            console.error('Error showing notification:', error);
+        }
+    }
+
+    /**
+     * Проверяет, инициализировано ли модальное окно
+     * @returns {boolean} True если модальное окно готово к использованию
+     */
+    isReady() {
+        return this.isInitialized && this.modal !== null;
     }
 }
 

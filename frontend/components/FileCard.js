@@ -34,8 +34,8 @@ class FileCard {
         card.dataset.fileId = this.fileId;
 
         card.innerHTML = `
-            <div class="flex items-center space-x-3 flex-1 min-w-0">
-                <div class="file-icon text-purple">
+            <div class="flex items-center space-x-3 flex-1 min-w-0 cursor-move"> <!-- Добавляем cursor-move для визуального указания drag -->
+                <div class="file-icon text-purple drag-handle cursor-grab active:cursor-grabbing"> <!-- Добавляем класс для drag-handle -->
                     ${this.getFileIcon()}
                 </div>
                 <div class="file-info flex-1 min-w-0">
@@ -44,18 +44,18 @@ class FileCard {
                 </div>
             </div>
             <div class="file-actions flex space-x-2 opacity-0 transition-opacity">
-                <button class="preview-btn p-1 text-gray-400 hover:text-purple" title="Предпросмотр">
+                <button class="preview-btn p-2 text-gray-400 hover:text-purple rounded-md hover:bg-blue-lighter transition-colors" title="Предпросмотр">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                 </button>
-                <button class="rename-btn p-1 text-gray-400 hover:text-purple" title="Переименовать">
+                <button class="rename-btn p-2 text-gray-400 hover:text-purple rounded-md hover:bg-blue-lighter transition-colors" title="Переименовать">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                     </svg>
                 </button>
-                <button class="remove-btn p-1 text-gray-400 hover:text-red-500" title="Удалить">
+                <button class="remove-btn p-2 text-gray-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors" title="Удалить">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -86,7 +86,6 @@ class FileCard {
      * @private
      */
     getFileIcon() {
-        // Упрощенная реализация - в реальном приложении можно добавить разные иконки
         return `
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -100,19 +99,34 @@ class FileCard {
      * @private
      */
     attachEventHandlers(card) {
-        // Предпросмотр
-        card.querySelector('.preview-btn').addEventListener('click', () => {
+        // Предпросмотр (кнопка)
+        card.querySelector('.preview-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Preview button clicked for file:', this.fileId);
             this.onPreview();
         });
 
         // Переименование
-        card.querySelector('.rename-btn').addEventListener('click', () => {
+        card.querySelector('.rename-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.startRenaming(card);
         });
 
         // Удаление
-        card.querySelector('.remove-btn').addEventListener('click', () => {
+        card.querySelector('.remove-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.onRemove();
+        });
+
+        // Двойной клик по карточке (предпросмотр)
+        card.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Double click preview for file:', this.fileId);
+            this.onPreview();
         });
     }
 
