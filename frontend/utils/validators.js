@@ -5,18 +5,9 @@
 
 // Поддерживаемые расширения файлов
 const SUPPORTED_EXTENSIONS = {
-    '.md': true,
-    '.txt': true,
-    '.yaml': true,
-    '.yml': true,
-    '.json': true,
-    '.cpp': true,
-    '.go': true,
-    '.py': true,
-    '.html': true,
-    '.css': true,
-    '.js': true,
-    '.sh': true
+    '.md': true, '.txt': true, '.yaml': true, '.yml': true, '.json': true,
+    '.cpp': true, '.go': true, '.py': true, '.html': true, '.css': true,
+    '.js': true, '.sh': true
 };
 
 // Максимальный размер файла (10 МБ)
@@ -28,14 +19,20 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
  * @returns {boolean} True если расширение поддерживается
  */
 export function isSupportedExtension(filename) {
-    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    if (!filename) return false;
 
-    // Проверяем специальные случаи (Dockerfile, Makefile)
-    if (filename.toLowerCase() === 'dockerfile' || filename.toLowerCase() === 'makefile') {
-        return true;
-    }
+    const lower = filename.toLowerCase();
 
-    return SUPPORTED_EXTENSIONS[extension] || false;
+    if (lower === 'dockerfile' || lower === 'makefile') return true;
+    if (lower.includes('docker-compose')) return true;
+
+    const idx = filename.lastIndexOf('.');
+
+    if (idx === -1) return false;
+
+    const ext = filename.substring(idx).toLowerCase();
+
+    return !!SUPPORTED_EXTENSIONS[ext];
 }
 
 /**
@@ -57,7 +54,7 @@ export function validateFile(file) {
         console.warn('Invalid file object:', file);
         return false;
     }
-    
+
     return isSupportedExtension(file.name) && isWithinSizeLimit(file);
 }
 
@@ -82,28 +79,19 @@ export function formatFileSize(bytes) {
  * @returns {string} Название иконки или класс
  */
 export function getFileIcon(filename) {
-    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    if (!filename) return 'file';
 
+    const lower = filename.toLowerCase();
+    if (lower === 'dockerfile' || lower.includes('docker-compose')) return 'box';
+    if (lower === 'makefile') return 'terminal';
+
+    const idx = filename.lastIndexOf('.');
+    const ext = idx === -1 ? '' : filename.substring(idx);
     const iconMap = {
-        '.md': 'file-text',
-        '.txt': 'file-text',
-        '.yaml': 'file-code',
-        '.yml': 'file-code',
-        '.json': 'file-code',
-        '.cpp': 'file-code',
-        '.go': 'file-code',
-        '.py': 'file-code',
-        '.html': 'file-code',
-        '.css': 'file-code',
-        '.js': 'file-code',
-        '.sh': 'terminal',
-        'dockerfile': 'box',
-        'makefile': 'terminal'
+        '.md': 'file-text', '.txt': 'file-text', '.yaml': 'file-code', '.yml': 'file-code', '.json': 'file-code',
+        '.cpp': 'file-code', '.go': 'file-code', '.py': 'file-code', '.html': 'file-code', '.css': 'file-code',
+        '.js': 'file-code', '.sh': 'terminal'
     };
 
-    // Для специальных случаев
-    if (filename.toLowerCase() === 'dockerfile') return iconMap.dockerfile;
-    if (filename.toLowerCase() === 'makefile') return iconMap.makefile;
-
-    return iconMap[extension] || 'file';
+    return iconMap[ext] || 'file';
 }

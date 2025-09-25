@@ -4,7 +4,6 @@
  */
 
 export const CONFIG = {
-    // Цветовая палитра проекта
     COLORS: {
         primary: '#cdb4db',
         primaryDark: '#b399cc',
@@ -18,60 +17,51 @@ export const CONFIG = {
         success: '#10b981',
         warning: '#f59e0b'
     },
-
-    // Анимации
     ANIMATIONS: {
-        duration: {
-            fast: 150,
-            normal: 300,
-            slow: 500
-        },
+        duration: { fast: 150, normal: 300, slow: 500 },
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
     },
-
-    // Ограничения
     LIMITS: {
         maxPreviewChars: 500,
-        maxFileSize: 10 * 1024 * 1024, // 10MB
+        maxFileSize: 10 * 1024 * 1024,
         supportedExtensions: ['.md', '.txt', '.yaml', '.yml', '.json', '.cpp', '.go', '.py', '.html', '.css', '.js', '.sh']
     },
-
-    // Тексты
     TEXTS: {
         appName: 'Code Merger',
-        appDescription: 'Объедините ваши кодовые файлы',
-        dropZone: {
-            title: 'Перетащите файлы сюда',
-            subtitle: 'или нажмите для выбора файлов',
-            supported: 'Поддерживаются: .md, .txt, .yaml, .yml, .json, .cpp, .go, .py, .html, .css, .js'
-        }
+        appDescription: 'Объедините ваши кодовые файлы'
     }
 };
 
 export const UI_CONFIG = {
-    ANIMATIONS: {
-        duration: 300,
-        easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-    },
-    LAYOUT: {
-        maxWidth: '1024px',
-        dropZoneWidth: '672px'
-    }
+    ANIMATIONS: { duration: 300, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+    LAYOUT: { maxWidth: '1024px', dropZoneWidth: '672px' }
 };
 
-// Утилиты для работы с конфигом
+/**
+ * Выбирает иконки для файла по его расширению
+ * @param {string} filename - расширение файла
+ * @returns {string} emoji (иконка)
+ */
 export const getFileIcon = (filename) => {
-    const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    if (!filename || typeof filename !== 'string') return '📁';
+    const lower = filename.toLowerCase();
+
+    // Специальные имена
+    if (lower === 'dockerfile' || lower.endsWith('/dockerfile')) return '🐳';
+    if (lower.includes('docker-compose') || lower.includes('docker-compose.yml') || lower.includes('docker-compose.yaml')) return '🐳';
+    if (lower === 'makefile') return '🔨';
+
+    // Ищем расширение
+    const lastDot = filename.lastIndexOf('.');
+    const ext = lastDot === -1 ? '' : filename.substring(lastDot).toLowerCase();
+
     const iconMap = {
         '.md': '📝', '.txt': '📄', '.yaml': '⚙️', '.yml': '⚙️', '.json': '🔧',
         '.cpp': '💻', '.go': '🐹', '.py': '🐍', '.html': '🌐', '.css': '🎨',
-        '.js': '📜', '.sh': '💻', 'dockerfile': '🐳', 'makefile': '🔨'
+        '.js': '📜', '.sh': '💻'
     };
 
-    if (filename.toLowerCase() === 'dockerfile') return iconMap.dockerfile;
-    if (filename.toLowerCase() === 'makefile') return iconMap.makefile;
-
-    return iconMap[extension] || '📁';
+    return iconMap[ext] || '📁';
 };
 
 export const formatFileSize = (bytes) => {

@@ -21,7 +21,6 @@ class App {
         this.renames = new Map();
         this.fileOrder = [];
         this.sortableInstance = null;
-        this.notification = Notification;
         this.init();
     }
 
@@ -30,9 +29,37 @@ class App {
      * @private
      */
     init() {
+        this.setupElements();
         this.setupEventListeners();
         this.setupDragAndDrop();
         this.render();
+    }
+
+    /**
+     * Настраивает все UI-элементы
+     * @private
+     */
+    setupElements() {
+        this.dropZone = document.getElementById('dropZone');
+        this.fileInput = document.getElementById('fileInput');
+        this.filesContainer = document.getElementById('filesContainer');
+        this.filesList = document.getElementById('filesList');
+        this.controlPanel = document.getElementById('controlPanel');
+        this.mergeButton = document.getElementById('mergeButton');
+        this.outputFilenameInput = document.getElementById('outputFilename');
+        this.presetSelect = document.getElementById('presetSelect');
+
+        // Theme toggle
+        this.themeToggle = document.getElementById('themeToggle');
+        this.initThemeToggle();
+
+        this.outputFilenameInput.addEventListener('input', () => {
+            let v = this.outputFilenameInput.value;
+            if (!v) return;
+            if (!v.toLowerCase().endsWith('.txt')) {
+                this.outputFilenameInput.value = v.replace(/\.txt$/i, '') + '.txt';
+            }
+        });
     }
 
     /**
@@ -41,18 +68,45 @@ class App {
      */
     setupEventListeners() {
         // Обработчик выбора файлов через input
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            this.handleFiles(e.target.files);
-        });
+        this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
 
         // Обработчик кнопки объединения
-        document.getElementById('mergeButton').addEventListener('click', () => {
-            this.handleMerge();
-        });
+        this.mergeButton.addEventListener('click', () => this.handleMerge());
 
         // Обработчик выбора пресета
-        document.getElementById('presetSelect').addEventListener('change', (e) => {
-            this.handlePresetSelect(e.target.value);
+        this.presetSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val !== 'custom') {
+                this.outputFilenameInput.value = val;
+            }
+        });
+
+        // Проводник по нажатию на зону выбора файлов
+        this.dropZone.addEventListener('click', () => this.fileInput.click());
+    }
+
+    /**
+     * Настраивает переключатель темы
+     * @private
+     */
+    initThemeToggle() {
+        if (!this.themeToggle) return;
+        const iconSpan = document.querySelector('.toggle-thumb .toggle-icon');
+        const thumb = document.querySelector('.toggle-thumb');
+
+        this.themeToggle.checked = false;
+        if (iconSpan) iconSpan.textContent = '🌞';
+
+        this.themeToggle.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            if (iconSpan) iconSpan.textContent = checked
+                ? '🌙'
+                : '🌞';
+            // TODO(feat): пока просто анимация + состояние
+            document.body.dataset.theme = checked ? 'dark' : 'light';
+            thumb.style.transform = checked ? 'translateX(0)' : '';
+
+            showNotification(checked ? 'Темная тема (визуально) выбрана' : 'Светлая тема (визуально) выбрана', 'info', 900);
         });
     }
 
@@ -62,58 +116,67 @@ class App {
      */
     setupDragAndDrop() {
         setupDragAndDrop({
-            dropZone: document.getElementById('dropZone'),
+            dropZone: this.dropZone,
             onDrop: (files) => this.handleFiles(files)
         });
+
+        this.dropZone.addEventListener('dragenter', () => this.dropZone.classList.add('drag-over'));
+        this.dropZone.addEventListener('dragleave', () => this.dropZone.classList.remove('drag-over'));
+        this.dropZone.addEventListener('drop', () => this.dropZone.classList.remove('drag-over'));
     }
 
     /**
      * Обрабатывает добавление файлов
-     * @param {FileList} files - Список файлов для обработки
+     * @param {FileList} filesList - Список файлов для обработки
      */
-    async handleFiles(files) {
-        console.log('Полученные файлы:', files);
-        console.log('Массив файлов:', Array.from(files));
-
-        const validFiles = Array.from(files).filter(validateFile);
-        console.log('Валидные файлы:', validFiles);
+    async handleFiles(filesList) {
+        const allFiles = Array.from(filesList);
+        const validFiles = allFiles.filter(validateFile);
 
         if (validFiles.length === 0) {
             showNotification('Нет подходящих файлов для загрузки', 'error');
             return;
         }
 
-        // Показываем индикатор загрузки
-        ProgressBar.show();
+        // Индикатор загрузки
+        if (ProgressBar) ProgressBar.show();
 
         try {
             const fileIds = await uploadFiles(validFiles);
 
-            if (!fileIds || !Array.isArray(fileIds)) {
-                throw new Error('Некорректный ответ от сервера');
-            }
-
-            // Добавление файлов в состояние приложения
-            fileIds.forEach((fileId, index) => {
-                const file = validFiles[index];
-                this.files.set(fileId, {
-                    file,
-                    originalName: file.name,
-                    customName: file.name,
-                    size: file.size,
-                    content: ''
+            if (!Array.isArray(fileIds) || fileIds.length !== validFiles.length) {
+                for (let i = 0; i < validFiles.length; i++) {
+                    const tmpId = `local-${Date.now()}-${i}`;
+                    const file = validFiles[i];
+                    this.files.set(tmpId, {
+                        file,
+                        originalName: file.name,
+                        customName: file.name,
+                        size: file.size,
+                        content: ''
+                    });
+                }
+            } else {
+                fileIds.forEach((id, idx) => {
+                    const file = validFiles[idx];
+                    this.files.set(id, {
+                        file,
+                        originalName: file.name,
+                        customName: file.name,
+                        size: file.size,
+                        content: ''
+                    });
                 });
-            });
+            }
 
             this.renderFileCards();
             this.updateUIState();
             showNotification(`Загружено ${validFiles.length} файлов`, 'success');
-
-        } catch (error) {
-            console.error('Upload error details:', error);
+        } catch (err) {
+            console.error('Upload error:', err);
             showNotification('Ошибка при загрузке файлов', 'error');
         } finally {
-            ProgressBar.hide();
+            if (ProgressBar) ProgressBar.hide();
         }
     }
 
@@ -123,11 +186,12 @@ class App {
      * @param {string} newName - Новое имя файла
      */
     handleRename(fileId, newName) {
+        if (!this.files.has(fileId)) return;
+
         const fileData = this.files.get(fileId);
-        if (fileData) {
-            fileData.customName = newName;
-            this.renames.set(fileData.originalName, newName);
-        }
+        fileData.customName = newName;
+
+        this.renames.set(fileData.originalName, newName);
     }
 
     /**
@@ -135,13 +199,14 @@ class App {
      * @param {string} fileId - ID файла для удаления
      */
     handleRemove(fileId) {
+        if (!this.files.has(fileId)) return;
+
         const fileData = this.files.get(fileId);
-        if (fileData) {
-            this.renames.delete(fileData.originalName);
-            this.files.delete(fileId);
-            this.renderFileCards();
-            this.updateUIState();
-        }
+        this.renames.delete(fileData.originalName);
+        this.files.delete(fileId);
+
+        this.renderFileCards();
+        this.updateUIState();
     }
 
     /**
@@ -149,41 +214,12 @@ class App {
      * @param {string} fileId - ID файла для предпросмотра
      */
     async handlePreview(fileId) {
-        console.log('handlePreview called for fileId:', fileId);
-
-        const fileData = this.files.get(fileId);
-        if (!fileData) {
+        if (!this.files.has(fileId)) {
             showNotification('Файл не найден', 'error');
             return;
         }
 
-        // Валидация: инициализировано ли модальное окно
-        if (!this.previewModal.isReady()) {
-            console.warn('PreviewModal not ready, initializing...');
-            this.previewModal.init();
-        }
-
-        ProgressBar.show('Загрузка содержимого файла...');
-
-        try {
-            // Получение содержимого файла с сервера
-            const content = await getFileContent(fileId);
-            console.log('File content loaded, length:', content.length);
-
-            // Ограничение предпросмотра (пока что 500 символов)
-            const previewContent = content.length > 500
-                ? content.substring(0, 500) + "\n\n... [содержимое обрезано для предпросмотра]"
-                : content;
-
-            // Показ модального окна
-            this.previewModal.show(fileData.customName, previewContent);
-
-        } catch (error) {
-            console.error('Preview error:', error);
-            showNotification('Ошибка при загрузке содержимого файла', 'error');
-        } finally {
-            ProgressBar.hide();
-        }
+        // TODO(feat): Вызов модалки
     }
 
     /**
@@ -192,7 +228,7 @@ class App {
      */
     handlePresetSelect(preset) {
         if (preset !== 'custom') {
-            document.getElementById('outputFilename').value = preset;
+            this.outputFilenameInput.value = preset;
         }
     }
 
@@ -200,22 +236,19 @@ class App {
      * Обрабатывает объединение файлов
      */
     async handleMerge() {
-        const outputFilename = document.getElementById('outputFilename').value;
-
+        const outputFilename = this.outputFilenameInput.value || 'merged.txt';
         if (!outputFilename) {
             showNotification('Введите имя выходного файла', 'warning');
             return;
         }
-
         if (this.files.size === 0) {
             showNotification('Нет файлов для объединения', 'warning');
             return;
         }
 
-        ProgressBar.show();
-
+        if (ProgressBar) ProgressBar.show();
         try {
-            const fileIds = this.fileOrder || Array.from(this.files.keys());
+            const fileIds = this.fileOrder.length > 0 ? this.fileOrder : Array.from(this.files.keys());
             const renamesObject = Object.fromEntries(this.renames);
 
             const result = await mergeFiles({
@@ -224,10 +257,9 @@ class App {
                 file_renames: renamesObject
             });
 
-            // Создание ссылки для скачивания
+            // Если server вернёт Blob/ArrayBuffer - создаём ссылку
             const blob = new Blob([result], { type: 'application/octet-stream; charset=utf-8' });
             const url = URL.createObjectURL(blob);
-
             const a = document.createElement('a');
             a.href = url;
             a.download = outputFilename;
@@ -237,12 +269,11 @@ class App {
             URL.revokeObjectURL(url);
 
             showNotification('Файлы успешно объединены', 'success');
-
-        } catch (error) {
+        } catch (err) {
+            console.error('Merge error:', err);
             showNotification('Ошибка при объединении файлов', 'error');
-            console.error('Merge error:', error);
         } finally {
-            ProgressBar.hide();
+            if (ProgressBar) ProgressBar.hide();
         }
     }
 
@@ -252,21 +283,16 @@ class App {
      */
     updateUIState() {
         const hasFiles = this.files.size > 0;
-        const filesContainer = document.getElementById('filesContainer');
-        const controlPanel = document.getElementById('controlPanel');
 
-        // Управление видимостью (через добавление/удаление классов)
         if (hasFiles) {
-            filesContainer.classList.remove('hidden');
-            filesContainer.classList.add('grid');
-            controlPanel.classList.remove('hidden');
+            this.filesContainer.classList.remove('hidden');
+            this.controlPanel.classList.remove('hidden');
         } else {
-            filesContainer.classList.add('hidden');
-            filesContainer.classList.remove('grid');
-            controlPanel.classList.add('hidden');
+            this.filesContainer.classList.add('hidden');
+            this.controlPanel.classList.add('hidden');
         }
 
-        document.getElementById('mergeButton').disabled = !hasFiles;
+        this.mergeButton.disabled = !hasFiles;
     }
 
     /**
@@ -274,47 +300,36 @@ class App {
      * @private
      */
     renderFileCards() {
-        const filesList = document.getElementById('filesList');
-        filesList.innerHTML = '';
+        this.filesList.innerHTML = '';
 
-        // Сохранение текущего порядка перед перерисовкой
-        const currentOrder = this.fileOrder.length > 0
-            ? this.fileOrder
-            : Array.from(this.files.keys());
-
-        // Рендер файлов
-        currentOrder.forEach(fileId => {
-            if (this.files.has(fileId)) {
-                const fileData = this.files.get(fileId);
-                const fileCard = new FileCard({
-                    fileId,
-                    fileName: fileData.customName,
-                    originalName: fileData.originalName,
-                    fileSize: fileData.size,
-                    onRename: (newName) => this.handleRename(fileId, newName),
-                    onRemove: () => this.handleRemove(fileId),
-                    onPreview: () => this.handlePreview(fileId)
-                });
-
-                filesList.appendChild(fileCard.render());
-            }
+        const currentOrder = this.fileOrder.length > 0 ? this.fileOrder : Array.from(this.files.keys());
+        currentOrder.forEach((fileId) => {
+            const f = this.files.get(fileId);
+            if (!f) return;
+            const fileCard = new FileCard({
+                fileId,
+                fileName: f.customName,
+                originalName: f.originalName,
+                fileSize: f.size,
+                onRename: (newName) => this.handleRename(fileId, newName),
+                onRemove: () => this.handleRemove(fileId),
+                onPreview: () => this.handlePreview(fileId)
+            });
+            const el = fileCard.render();
+            this.filesList.appendChild(el);
         });
 
         // Инициализация Sortable.js для перетаскивания
+        if (this.sortableInstance) {
+            try { this.sortableInstance.destroy(); } catch (e) { /* ignore */ }
+        }
         if (this.files.size > 0) {
-            if (this.sortableInstance) {
-                this.sortableInstance.destroy();
-            }
-
-            this.sortableInstance = new Sortable(filesList, {
+            this.sortableInstance = new Sortable(this.filesList, {
                 animation: 150,
-                ghostClass: 'bg-blue-light',
+                ghostClass: 'opacity-60',
                 filter: '.preview-btn, .rename-btn, .remove-btn',
                 preventOnFilter: false,
-                onEnd: (evt) => {
-                    console.log('Drag ended, old index:', evt.oldIndex, 'new index:', evt.newIndex);
-                    this.updateFileOrder();
-                }
+                onEnd: () => this.updateFileOrder()
             });
         }
     }
@@ -324,25 +339,18 @@ class App {
      * @private
      */
     updateFileOrder() {
-        const filesList = document.getElementById('filesList');
-        const fileCards = Array.from(filesList.querySelectorAll('[data-file-id]'));
-        const newOrder = fileCards.map(card => card.dataset.fileId);
+        const cards = Array.from(this.filesList.querySelectorAll('[data-file-id]'));
+        const newOrder = cards.map(c => c.dataset.fileId);
 
-        // Валидация: порядок изменился
         if (JSON.stringify(newOrder) !== JSON.stringify(this.fileOrder)) {
-            const reorderedFiles = new Map();
-
-            newOrder.forEach(fileId => {
-                if (this.files.has(fileId)) {
-                    reorderedFiles.set(fileId, this.files.get(fileId));
-                }
+            const reordered = new Map();
+            newOrder.forEach(id => {
+                if (this.files.has(id)) reordered.set(id, this.files.get(id));
             });
 
-            // Обновление состояния
-            this.files = reorderedFiles;
+            this.files = reordered;
             this.fileOrder = newOrder;
 
-            console.log('Порядок файлов обновлен:', this.fileOrder);
             showNotification('Порядок файлов обновлён', 'success');
         }
     }
@@ -352,12 +360,9 @@ class App {
      * @private
      */
     render() {
-        // Базовая инициализация уже выполнена в конструкторе
         this.updateUIState();
     }
 }
 
 // Инициализация приложения после загрузки DOM
-document.addEventListener('DOMContentLoaded', () => {
-    new App();
-});
+document.addEventListener('DOMContentLoaded', () => new App());

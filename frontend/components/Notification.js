@@ -17,7 +17,7 @@ class Notification {
 
     createContainer() {
         this.container = document.createElement('div');
-        this.container.id = 'enhanced-notifications';
+        this.container.id = 'notifications';
         this.container.className = 'fixed top-4 right-4 z-50 space-y-2 max-w-sm';
         document.body.appendChild(this.container);
     }
