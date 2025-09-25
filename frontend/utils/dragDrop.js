@@ -10,10 +10,7 @@
  * @param {Function} config.onDrop - Колбэк при успешном перетаскивании файлов
  */
 export function setupDragAndDrop({ dropZone, onDrop }) {
-    if (!dropZone) {
-        console.error('Drop zone element not found');
-        return;
-    }
+    if (!dropZone) return;
 
     /**
      * Обрабатывает событие перетаскивания над зоной
@@ -23,8 +20,7 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDragOver = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.add('bg-blue-light', 'border-purple');
-        dropZone.classList.remove('border-pink-light');
+        dropZone.classList.add('drag-over', 'animate-border-dance');
     };
 
     /**
@@ -35,8 +31,9 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDragLeave = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.remove('bg-blue-light', 'border-purple');
-        dropZone.classList.add('border-pink-light');
+        if (!dropZone.contains(e.relatedTarget)) {
+            dropZone.classList.remove('drag-over', 'animate-border-dance');
+        }
     };
 
     /**
@@ -47,9 +44,7 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDrop = (e) => {
         e.preventDefault();
         e.stopPropagation();
-
-        dropZone.classList.remove('bg-blue-light', 'border-purple');
-        dropZone.classList.add('border-pink-light');
+        dropZone.classList.remove('drag-over', 'animate-border-dance');
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -57,44 +52,22 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
         }
     };
 
-    // Назначаем обработчики событий
+    // Обработчики событий
     dropZone.addEventListener('dragover', handleDragOver);
     dropZone.addEventListener('dragleave', handleDragLeave);
     dropZone.addEventListener('drop', handleDrop);
 
-    // Обработчик клика по зоне для открытия диалога выбора файлов
+    // Клик по зоне
     dropZone.addEventListener('click', () => {
         document.getElementById('fileInput').click();
     });
 
     // Визуальная обратная связь при наведении
     dropZone.addEventListener('mouseenter', () => {
-        dropZone.classList.add('bg-blue-light');
+        dropZone.style.transform = 'scale(1.02)';
     });
 
     dropZone.addEventListener('mouseleave', () => {
-        if (!dropZone.classList.contains('border-purple')) {
-            dropZone.classList.remove('bg-blue-light');
-        }
+        dropZone.style.transform = 'scale(1)';
     });
-}
-
-/**
- * Проверяет, являются ли перетаскиваемые элементы файлами
- * @param {DragEvent} e - Событие перетаскивания
- * @returns {boolean} True если перетаскиваются файлы
- */
-export function isFileDrag(e) {
-    if (!e.dataTransfer) return false;
-
-    // Проверяем types на наличие файлов
-    if (e.dataTransfer.types) {
-        for (let i = 0; i < e.dataTransfer.types.length; i++) {
-            if (e.dataTransfer.types[i] === 'Files') {
-                return true;
-            }
-        }
-    }
-
-    return false;
 }

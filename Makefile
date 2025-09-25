@@ -6,8 +6,8 @@
 # Пересборка и запуск {run}
 run:
 	docker-compose down
-	docker-compose build
-	docker-compose up backend frontend
+	docker-compose build --no-cache
+	docker-compose up
 	@echo "💙 backend is available at: http://localhost:8080"
 	@echo "🧡 frontend is available at: http://localhost:3001"
 
@@ -15,7 +15,7 @@ run:
 runf:
 	docker-compose down
 	docker-compose build
-	docker-compose up -d backend frontend
+	docker-compose up
 	@echo "💙 backend is available at: http://localhost:8080"
 	@echo "🧡 frontend is available at: http://localhost:3001"
 

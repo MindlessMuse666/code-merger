@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="font-cute">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,59 +8,95 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
-<body class="bg-blue-lighter min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-purple animate__animated animate__fadeInDown">Code Merger</h1>
-            <p class="text-gray-600 mt-2">Объедините ваши кодовые файлы</p>
-        </header>
 
-        <main>
-            <!-- Drag-and-drop зона -->
-            <div id="dropZone" class="border-2 border-dashed border-pink-light rounded-lg p-8 text-center cursor-pointer hover:bg-blue-light transition-colors">
-                <div class="text-gray-500">
-                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    <p class="text-xl">Перетащите файлы сюда</p>
-                    <p class="text-sm mt-2">или нажмите для выбора файлов</p>
-                    <p class="text-xs mt-1 text-gray-400">Поддерживаются: .md, .txt, .yaml, .yml, .json, .cpp, .go, .py, .html, .css, .js</p>
+<body class="bg-gradient-to-br from-secondary-light to-white min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white shadow-lg border-b-4 border-primary">
+        <div class="container mx-auto px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-center md:text-left ml-4">
+                    <h1 class="text-4xl font-bold text-primary drop-shadow-sm"
+                        style="text-shadow: 2px 2px 4px rgba(205, 180, 219, 0.3);">Code Merger</h1>
+                    <p class="text-lg text-gray-700 mt-1">Объедините ваши кодовые файлы</p>
                 </div>
-                <input type="file" id="fileInput" class="hidden" multiple>
+                <div class="mr-4">
+                    <label for="themeToggle" class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="themeToggle" class="sr-only">
+                            <div class="toggle-track w-16 h-8 bg-accent-light rounded-full shadow-inner"></div>
+                            <div
+                                class="toggle-thumb absolute left-1 top-1 bg-primary w-6 h-6 rounded-full transition-transform duration-300 flex items-center justify-center">
+                                <span class="text-sm">☀️</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <main class="space-y-8">
+            <!-- Drag-and-drop зона -->
+            <div class="text-center">
+                <div id="dropZone" class="enhanced-drop-zone max-w-2xl mx-auto rounded-3xl p-12">
+                    <div class="text-gray-600">
+                        <div class="text-6xl mb-4">📁</div>
+                        <h2 class="text-2xl font-bold text-primary mb-2">Перетащите файлы сюда</h2>
+                        <p class="text-lg mb-1">или нажмите для выбора файлов</p>
+                        <p class="text-sm text-gray-500 mt-3">Поддерживаются: .md, .txt, .yaml, .yml, .json, .cpp, .go,
+                            .py, .html, .css, .js</p>
+                    </div>
+                    <input type="file" id="fileInput" class="hidden" multiple
+                        accept=".md,.txt,.yaml,.yml,.json,.cpp,.go,.py,.html,.css,.js,.sh">
+                </div>
             </div>
 
             <!-- Контейнер для карточек файлов -->
-            <div id="filesContainer" class="mt-6 gap-4 hidden">
-                <h2 class="text-2xl font-semibold text-purple">Загруженные файлы</h2>
-                <div id="filesList" class="space-y-4"></div>
+            <div id="filesContainer" class="files-container hidden">
+                <h2 class="text-3xl font-bold text-primary mb-6 text-center">Загруженные файлы</h2>
+                <div id="filesList" class="space-y-4 max-w-4xl mx-auto"></div>
             </div>
 
             <!-- Панель управления -->
-            <div id="controlPanel" class="mt-6 p-4 bg-white rounded-lg shadow hidden">
-                <div class="flex flex-col md:flex-row gap-4 items-center">
-                    <div class="flex-1">
-                        <label for="outputFilename" class="block text-sm font-medium text-gray-700">Имя выходного файла</label>
-                        <div class="mt-1 flex rounded-md shadow-sm">
-                            <input type="text" id="outputFilename" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-purple focus:border-purple" placeholder="Введите имя файла">
-                            <select id="presetSelect" class="ml-3 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-purple focus:border-purple">
-                                <option value="custom">Выберите пресет...</option>
-                                <option value="code-base.txt">code-base.txt</option>
-                                <option value="specifications.txt">specifications.txt</option>
-                            </select>
+            <div id="controlPanel" class="files-container hidden">
+                <div class="max-w-4xl mx-auto">
+                    <h3 class="text-2xl font-bold text-primary mb-4">Настройки вывода</h3>
+                    <div class="flex flex-col lg:flex-row gap-6 items-start lg:items-end">
+                        <div class="flex-1">
+                            <label for="outputFilename" class="block text-lg font-semibold text-gray-700 mb-2">
+                                Имя выходного файла
+                            </label>
+                            <div class="flex gap-3">
+                                <input type="text" id="outputFilename" class="flex-1 px-4 py-3 border-2 border-primary rounded-xl 
+                                              focus:outline-none focus:ring-2 focus:ring-primary
+                                              text-lg" placeholder="Введите имя файла">
+                                <select id="presetSelect" class="px-4 py-3 border-2 border-primary rounded-xl 
+                                               bg-white focus:outline-none focus:ring-2 focus:ring-primary
+                                               text-lg">
+                                    <option value="custom">Выберите пресет...</option>
+                                    <option value="code-base.txt">code-base.txt</option>
+                                    <option value="specifications.txt">specifications.txt</option>
+                                </select>
+                            </div>
                         </div>
+                        <button id="mergeButton" disabled class="px-8 py-3 bg-primary text-white font-bold rounded-xl 
+                                       hover:bg-primary-dark transform hover:scale-105 
+                                       disabled:opacity-50 disabled:cursor-not-allowed 
+                                       disabled:transform-none smooth-transition
+                                       text-lg">
+                            Объединить
+                        </button>
                     </div>
-                    <button id="mergeButton" disabled class="px-6 py-2 bg-purple text-white font-medium rounded-md hover:bg-purple-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Объединить
-                    </button>
                 </div>
             </div>
 
             <!-- Индикатор прогресса -->
-            <div id="progressIndicator" class="mt-6 hidden">
-                <div class="bg-white rounded-lg shadow p-4">
-                    <div class="flex items-center">
-                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple"></div>
-                        <span class="ml-3 text-gray-700">Обработка файлов...</span>
+            <div id="progressIndicator" class="hidden">
+                <div class="files-container text-center">
+                    <div class="flex items-center justify-center space-x-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <span class="text-xl text-gray-700">Обработка файлов...</span>
                     </div>
                 </div>
             </div>
@@ -69,4 +106,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

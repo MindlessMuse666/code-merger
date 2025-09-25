@@ -1,106 +1,116 @@
 @import "tailwindcss";
 
 @theme {
-  --color-blue-light: #a2d2ff;
-  --color-blue-lighter: #bee2ff;
-  --color-pink: #faaac7;
-  --color-pink-light: #ffc8dd;
-  --color-purple: #cdb4db;
-  --color-purple-dark: #b399cc;
+  /* Основная цветовая палитра */
+  --color-primary: #cdb4db;
+  --color-primary-light: #bee2ff;
+  --color-primary-dark: #b399cc;
+  --color-secondary: #a2d2ff;
+  --color-secondary-light: #bee2ff;
+  --color-accent: #faaac7;
+  --color-accent-light: #ffc8dd;
+
+  /* Дополнительные цвета */
+  --color-error: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
 }
 
+/* Кастомные стили */
+@layer components {
+  /* Header */
+  .sticky-header {
+    @apply sticky top-0 z-50 bg-white shadow-lg border-b-2 border-primary;
+  }
 
-/* Карточки файлов */
+  /* Drop Zone */
+  .enhanced-drop-zone {
+    @apply bg-secondary-light border-3 border-dashed border-primary rounded-3xl transition-all duration-500 ease-in-out cursor-pointer hover:bg-secondary hover:border-accent;
+  }
 
-.file-card {
-  transition: all 0.3s ease;
+  .enhanced-drop-zone.drag-over {
+    @apply bg-accent-light border-accent animate-pulse;
+    background: linear-gradient(45deg, #ffc8dd, #bee2ff, #ffc8dd);
+    background-size: 200% 200%;
+    animation: gradientShift 2s ease infinite;
+  }
+
+  /* Анимация для градиента */
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Анимация пунктирной границы */
+  @keyframes borderDance {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 30px 0;
+    }
+  }
+
+  .animate-border-dance {
+    background-image: linear-gradient(90deg, var(--color-primary) 50%, transparent 50%);
+    background-size: 30px 3px;
+    animation: borderDance 1s linear infinite;
+  }
+
+  /* Контейнеры карточек */
+  .files-container {
+    @apply bg-white rounded-2xl shadow-lg p-6 border-2 border-primary-light;
+  }
+
+  /* Карточка файла */
+  .file-card {
+    @apply bg-gradient-to-r from-white to-secondary-light rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-l-4 border-primary;
+  }
+
+  /* Варианты кнопок */
+  .preview-btn {
+    @apply action-btn bg-info/20 hover:bg-info/30;
+  }
+
+  .rename-btn {
+    @apply action-btn bg-warning/20 hover:bg-warning/30;
+  }
+
+  .remove-btn {
+    @apply action-btn bg-error/20 hover:bg-error/30;
+  }
+
+  /* Плавные переходы */
+  .smooth-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
-.file-card:active {
-  transform: scale(0.98);
+/* Кастомные utility */
+@utility border-primary-light {
+  border-color: var(--color-primary-light);
 }
 
-.file-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+@utility border-3 {
+  border-width: 3px;
 }
 
-
-/* Кнопки действий файлов */
-
-.file-actions {
-  opacity: 1 !important;
+/* Базовая кнопка как utility */
+@utility action-btn {
+  @apply p-2 rounded-lg transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary;
 }
 
-.file-actions button {
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-}
+/* Подключение кавайного шрифта */
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
 
-.file-actions button:hover {
-  transform: scale(1.1);
-  border-color: var(--color-purple);
-  background-color: var(--color-blue-lighter);
-}
-
-
-/* Иконки */
-
-.preview-btn:hover svg,
-.rename-btn:hover svg {
-  stroke-width: 2.5;
-}
-
-.remove-btn:hover svg {
-  stroke-width: 2.5;
-}
-
-
-/* Drag-and-Drop */
-
-.drag-handle {
-  transition: all 0.2s ease;
-}
-
-.drag-over {
-  @apply bg-blue-light border-purple;
-}
-
-
-/* Курсор */
-
-.cursor-grab {
-  cursor: grab;
-}
-
-.cursor-grabbing {
-  cursor: grabbing;
-}
-
-.active\:cursor-grabbing:active {
-  cursor: grabbing;
-}
-
-
-/* Модальное окно */
-
-.modal-backdrop {
-  backdrop-filter: blur(4px);
-}
-
-
-/* Блюр в предпросмотре */
-.blur-effect {
-  backdrop-filter: blur(8px);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 50%);
-}
-
-
-/* Утилитарные классы */
-
-.truncate-2-lines {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.font-cute {
+  font-family: 'Comic Neue', cursive;
 }

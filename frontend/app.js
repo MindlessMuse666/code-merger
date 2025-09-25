@@ -4,8 +4,8 @@
  * @module App
  */
 
+import Notification from './components/Notification.js';
 import FileCard from './components/FileCard.js';
-import PreviewModal from './components/PreviewModal.js';
 import ProgressBar from './components/ProgressBar.js';
 import { uploadFiles, mergeFiles, getFileContent } from './utils/api.js';
 import { setupDragAndDrop } from './utils/dragDrop.js';
@@ -21,7 +21,7 @@ class App {
         this.renames = new Map();
         this.fileOrder = [];
         this.sortableInstance = null;
-        this.previewModal = new PreviewModal();
+        this.notification = Notification;
         this.init();
     }
 
@@ -93,14 +93,15 @@ class App {
                 throw new Error('Некорректный ответ от сервера');
             }
 
-            // Добавляем файлы в состояние приложения
+            // Добавление файлов в состояние приложения
             fileIds.forEach((fileId, index) => {
                 const file = validFiles[index];
                 this.files.set(fileId, {
                     file,
                     originalName: file.name,
                     customName: file.name,
-                    content: '' // Контент будет загружен при предпросмотре
+                    size: file.size,
+                    content: ''
                 });
             });
 
@@ -281,7 +282,7 @@ class App {
             ? this.fileOrder
             : Array.from(this.files.keys());
 
-        // Рендер файлов в правильном порядке
+        // Рендер файлов
         currentOrder.forEach(fileId => {
             if (this.files.has(fileId)) {
                 const fileData = this.files.get(fileId);
@@ -289,6 +290,7 @@ class App {
                     fileId,
                     fileName: fileData.customName,
                     originalName: fileData.originalName,
+                    fileSize: fileData.size,
                     onRename: (newName) => this.handleRename(fileId, newName),
                     onRemove: () => this.handleRemove(fileId),
                     onPreview: () => this.handlePreview(fileId)
