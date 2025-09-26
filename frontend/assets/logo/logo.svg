@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 100 100" role="img"
+    aria-labelledby="title desc">
+    <title id="title">Логотип Code Merger</title>
+    <desc id="desc">Квадратный логотип продукта Code Merger.</desc>
+    <style>
+        .p { fill: #cdb4db; stroke: #4a3c57; }
+        .s { fill: #a2d2ff; stroke: #4a3c57; }
+        .a { fill: #faaac7; stroke: #4a3c57; }
+
+        .res {
+            fill: white;
+            stroke: #4a3c57;
+        }
+
+        .flow {
+            stroke: #4a3c57;
+        }
+    </style>
+    <rect x="12" y="12" width="20" height="20" rx="3" ry="3" class="p" stroke-width="2" />
+    <rect x="40" y="12" width="20" height="20" rx="3" ry="3" class="s" stroke-width="2" />
+    <rect x="68" y="12" width="20" height="20" rx="3" ry="3" class="a" stroke-width="2" />
+    <path d="M22 32 C22 50, 30 66, 50 70" fill="none" class="flow" stroke-width="2" />
+    <path d="M50 32 C50 50, 50 66, 50 70" fill="none" class="flow" stroke-width="2" />
+    <path d="M78 32 C78 50, 70 66, 50 70" fill="none" class="flow" stroke-width="2" />
+    <rect x="30" y="70" width="40" height="20" rx="3" ry="3" class="res" stroke-width="2" />
+    <circle cx="50" cy="80" r="3" fill="var(--color-accent, #faaac7)" stroke="#4a3c57"
+        stroke-width="1.5" />
+</svg>

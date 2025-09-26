@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-@theme {
+/* Палитра цветов */
+:root {
   --color-primary: #cdb4db;
   --color-primary-light: #bee2ff;
   --color-primary-dark: #b399cc;
@@ -18,46 +19,50 @@
 
   /* Header */
   .sticky-header {
-    @apply sticky top-0 z-50 bg-white shadow-md border-b-4;
-    border-color: var(--color-primary);
+    @apply sticky top-0 z-50;
+    background: linear-gradient(135deg, var(--color-secondary-light), #fff);
+    border-bottom: 6px solid var(--color-primary);
   }
 
   /* Drop Zone */
   .enhanced-drop-zone {
-    @apply bg-secondary-light rounded-3xl transition-all duration-500 ease-in-out cursor-pointer p-12;
-    border-width: 5px;
-    border-style: dashed;
-    border-color: var(--color-primary);
-    position: relative;
+    @apply relative rounded-3xl transition-all duration-500 ease-in-out cursor-pointer flex flex-col items-center justify-center;
+    @apply w-full max-w-xl h-72 p-8;
+    border: 8px dashed var(--color-primary);
+    background: linear-gradient(135deg, #fff, var(--color-secondary-light));
     overflow: hidden;
   }
 
-  /* Анимация Drop Zone */
+  .drop-zone-icon {
+    text-shadow: 2px 2px 0 #b399cc, 0 0 10px rgba(205, 180, 219, 0.4);
+  }
+
+  /* Анимация пунктирной рамки */
   .enhanced-drop-zone::after {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
     border-radius: inherit;
-    background:
-      linear-gradient(90deg, transparent 0, transparent 50%),
-      repeating-linear-gradient(90deg, rgba(205, 180, 219, 0.35) 0 12px, rgba(205, 180, 219, 0) 12px 24px);
-    mix-blend-mode: normal;
-    opacity: 0.9;
-    background-size: 100% 100%, 200% 100%;
-    animation: dashShift 1.6s linear infinite;
+    border: 8px dashed var(--color-primary);
+    background: repeating-linear-gradient(90deg,
+        var(--color-primary) 0 12px,
+        transparent 12px 24px);
+    animation: dashShift 2s linear infinite;
   }
 
   .enhanced-drop-zone.drag-over {
-    background: linear-gradient(45deg, var(--color-accent-light), var(--color-secondary-light));
+    background: linear-gradient(45deg,
+        var(--color-accent-light),
+        var(--color-secondary-light));
     animation: gradientShift 2.5s ease infinite;
   }
 
   .enhanced-drop-zone:hover::after {
-    animation-duration: 3s;
+    animation-duration: 3.5s;
   }
 
-  /* Анимация плавного градиента */
+  /* Плавный градиент */
   @keyframes gradientShift {
     0% {
       background-position: 0% 50%;
@@ -72,39 +77,39 @@
     }
   }
 
-  /* Плавное смещение пунктирной маски */
+  /* Смещение пунктира */
   @keyframes dashShift {
-    0% {
-      background-position: 0% 0, 0 0;
+    from {
+      background-position: 0 0;
     }
 
-    100% {
-      background-position: 0% 0, 200% 0;
+    to {
+      background-position: 200% 0;
     }
   }
 
-  /* Контейнеры карточек */
+  /* Контейнер с файлами */
   .files-container {
     @apply bg-white rounded-3xl shadow-sm p-6;
-    border-width: 4px;
+    border-width: 6px;
     border-style: solid;
     border-color: var(--color-primary);
-    max-width: 42rem;
+    max-width: 48rem;
     margin: 0 auto;
   }
 
   /* Карточка файла */
   .file-card {
-    @apply bg-gradient-to-r from-white to-secondary-light rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-4 mb-5 flex items-start;
-    border-width: 3px;
-    border-style: solid;
-    border-color: rgba(195, 165, 200, 0.6);
+    @apply bg-gradient-to-r from-white to-secondary-light rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-start;
+    border-left: 6px solid var(--color-primary);
+    border-bottom: 6px solid var(--color-primary);
     gap: 1rem;
     width: 100%;
-    min-height: 84px;
+    min-height: 110px;
+    padding: 1.5rem;
   }
 
-  /* Варианты кнопок */
+  /* Кнопки действий */
   .action-btn {
     @apply flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 transform focus:outline-none;
     border-width: 2px;
@@ -114,8 +119,8 @@
   }
 
   .action-btn:hover {
-    transform: translateY(-3px) scale(1.03);
     border-color: var(--color-primary);
+    box-shadow: 0 0 6px rgba(205, 180, 219, 0.5);
   }
 
   .action-btn:active {
@@ -123,68 +128,38 @@
     border-color: var(--color-primary-dark);
   }
 
-  .preview-btn {}
-
-  .rename-btn {}
-
-  .remove-btn {}
-
-  /* Плавные переходы */
-  .smooth-transition {
-    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Виджет переключения темы */
+  .theme-toggle {
+    @apply relative w-20 h-10 rounded-full overflow-hidden cursor-pointer;
+    background: var(--color-secondary-light);
+    border: 3px solid var(--color-primary);
   }
 
-  /* Toggle темы */
-  .toggle-track {
-    transition: all 0.35s ease;
-    width: 4rem;
-    height: 2rem;
-    background-color: var(--color-accent-light);
-    border-radius: 9999px;
-    position: relative;
+  .theme-toggle-circle {
+    @apply absolute top-0.5 left-0.5 w-9 h-9 rounded-full flex items-center justify-center text-xl transition-all duration-500;
+    background: var(--color-accent-light);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
-  .toggle-thumb {
-    transition: transform 0.35s ease, background-color 0.35s ease;
-    position: absolute;
-    left: 0.2rem;
-    top: 0.18rem;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 9999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-    background-color: var(--color-secondary);
+  input#themeToggle:checked+.theme-toggle .theme-toggle-circle {
+    transform: translateX(2.5rem);
+    background: var(--color-accent);
   }
 
-  input#themeToggle:checked+.toggle-track .toggle-thumb {
-    transform: translateX(1.8rem);
-    background-color: var(--color-accent);
-  }
-
-  /* Подключение шрифта */
-  @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
+  /* Шрифт */
+  @import url("https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap");
 
   .font-cute {
-    font-family: 'Comic Neue', cursive;
+    font-family: "Comic Neue", cursive;
   }
 
-  /* Тень для текста primary цвета */
+  /* Тень для текста */
   .text-primary {
-    text-shadow: 1px 1px 0 #b399cc, 0 0 6px rgba(205, 180, 219, 0.25);
+    text-shadow: 1px 1px 0 #8a6a9e, 0 0 6px rgba(205, 180, 219, 0.4);
     color: var(--color-primary);
   }
 
-  /* Ограничение названия файла (fallback) */
-  .filename-truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Контейнер предпросмотра с обводкой */
+  /* Контейнер предпросмотра */
   .preview-content {
     border-width: 2px;
     border-style: solid;
@@ -192,22 +167,7 @@
     border-radius: 0.5rem;
   }
 
-  /* Input + visual .txt */
-  .filename-input-wrap {
-    position: relative;
-  }
-
-  .filename-input-wrap .txt-suffix {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    font-size: 0.95rem;
-    color: rgba(0, 0, 0, 0.55);
-  }
-
-  /* Select - убираем встроенную svg-стрелку (упрощённо) */
+  /* Select без встроенной стрелки */
   select.clean-select {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -217,15 +177,15 @@
   }
 }
 
-/* дополнительные utility */
-@utility border-primary-light {
-  border-color: var(--color-primary-light);
+/* Utility классы */
+@utility border-8 {
+  border-width: 8px;
 }
 
-@utility border-3 {
-  border-width: 3px;
+@utility bg-secondary-light {
+  border-color: var(--color-secondary-light);
 }
 
-@utility border-4 {
-  border-width: 4px;
+@utility to-secondary-light {
+  border-color: var(--color-secondary-light);
 }

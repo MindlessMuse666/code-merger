@@ -46,22 +46,27 @@ class FileCard {
     }
 
     /**
-     * Обрезает отображаемое имя файла
-     * @param {str} name - название файла
-     * @param {int} maxChars - максимальное количество символов
-     * @returns {string} сокращенное отображаемое имя
+     * Обрезает отображаемое имя файла так, чтобы всегда оставалась первая буква и расширение
+     * @param {string} name - название файла
+     * @param {number} maxChars - максимальное количество символов (включая точки и расширение)
+     * @returns {string} сокращённое отображаемое имя
      * @private 
      */
     truncateFilename(name, maxChars) {
-        // Всегда сохраняем расширение (если есть)
         const dot = name.lastIndexOf('.');
         const ext = dot === -1 ? '' : name.substring(dot);
         const base = dot === -1 ? name : name.substring(0, dot);
 
-        if (base.length <= maxChars) return base + ext;
-        // Оставляем первый символ, немного середины и расширение
-        const keep = Math.max(1, Math.floor((maxChars - 2) / 2));
-        const left = base.substring(0, maxChars - (keep + 3));
+        if (base.length + ext.length <= maxChars) {
+            return base + ext;
+        }
+
+        if (maxChars <= ext.length + 5) {
+            return `${base[0]}....${ext}`;
+        }
+
+        const keep = Math.max(1, Math.floor((maxChars - ext.length - 5) / 2));
+        const left = base.substring(0, keep + 1);
         const right = base.substring(base.length - keep);
 
         return `${left}....${right}${ext}`;
@@ -76,58 +81,53 @@ class FileCard {
         card.className = 'file-card smooth-transition cursor-move';
         card.dataset.fileId = this.fileId;
 
-        const maxChars = this.computeMaxChars();
-        const displayName = this.truncateFilename(this.fileName, maxChars);
-        const displayOriginal = this.truncateFilename(this.originalName, Math.max(8, Math.floor(maxChars / 1.5)));
-
+        const displayName = this.truncateFilename(this.fileName, this.computeMaxChars());
+        const displayOriginal = this.truncateFilename(this.originalName, 12);
         const icon = getFileIcon(this.fileName);
 
         card.innerHTML = `
             <div class="flex items-start w-full gap-4">
+                <!-- Иконка -->
                 <div class="flex-shrink-0">
-                <div class="text-3xl w-12 h-12 rounded-md flex items-center justify-center bg-white shadow-sm border-2" style="border-color: rgba(205,180,219,0.5)">
-                    ${icon}
-                </div>
+                    <div class="text-3xl w-12 h-12 flex items-center justify-center">${icon}</div>
                 </div>
 
+                <!-- Инфо -->
                 <div class="flex-1 min-w-0">
-                <div class="file-name text-base font-semibold text-gray-900 filename-truncate" title="${this.fileName}">
-                    ${displayName}
-                </div>
-                <div class="file-info flex items-center space-x-3 text-xs text-gray-600 mt-2">
-                    <span class="bg-primary bg-opacity-20 px-2 py-1 rounded-full filename-truncate" title="${this.originalName}">
-                    ${displayOriginal}
-                    </span>
-                    <span class="bg-secondary bg-opacity-20 px-2 py-1 rounded-full">
-                    ${formatFileSize(this.fileSize)}
-                    </span>
-                </div>
-
-                <div class="preview-area hidden mt-3 smooth-transition">
-                    <div class="border-t pt-3">
-                    <div class="preview-content text-sm text-gray-600 bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto font-mono"></div>
-                    <div class="mt-3 flex gap-2">
-                        <button class="load-preview-btn px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark smooth-transition">📖 Загрузить предпросмотр</button>
-                        <button class="close-preview-btn px-3 py-2 bg-white border border-gray-200 rounded-lg hover:shadow-sm smooth-transition">Закрыть</button>
+                    <div class="file-name text-lg font-semibold text-gray-900" title="${this.fileName}">${displayName}</div>
+                    <div class="file-info flex items-center space-x-3 text-xs text-gray-600 mt-2">
+                        <span class="bg-primary bg-opacity-20 px-2 py-1 rounded-full"
+                            title="${this.originalName}">${displayOriginal}</span>
+                        <span class="bg-secondary bg-opacity-20 px-2 py-1 rounded-full">${formatFileSize(this.fileSize)}</span>
                     </div>
-                    </div>
-                </div>
 
-                <div class="edit-area hidden mt-3 smooth-transition">
-                    <div class="flex gap-2 items-center">
-                    <input type="text" class="edit-input flex-1 px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2" value="${this.fileName}">
-                    <button class="save-edit-btn action-btn" title="Сохранить">💾</button>
-                    <button class="cancel-edit-btn action-btn" title="Сбросить">↺</button>
+                    <!-- Предпросмотр -->
+                    <div class="preview-area hidden mt-3 smooth-transition">
+                        <div
+                            class="preview-content text-sm text-gray-600 bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto font-mono whitespace-pre">
+                        </div>
+                    </div>
+
+                    <!-- Редактирование -->
+                    <div class="edit-area hidden mt-3 smooth-transition">
+                        <div class="flex gap-2 items-center">
+                            <input type="text"
+                                class="edit-input flex-1 px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary hover:ring-2 hover:ring-primary"
+                                value="${this.fileName}">
+                            <button
+                                class="save-edit-btn px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">💾</button>
+                            <button class="cancel-edit-btn px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">↺</button>
+                        </div>
                     </div>
                 </div>
-                </div>
 
+                <!-- Действия -->
                 <div class="file-actions flex-shrink-0 flex flex-col items-end gap-2">
-                <div class="flex space-x-2">
-                    <button class="preview-btn action-btn" title="Предпросмотр"><span class="text-lg">👁️</span></button>
-                    <button class="rename-btn action-btn" title="Переименовать"><span class="text-lg">✏️</span></button>
-                    <button class="remove-btn action-btn" title="Удалить"><span class="text-lg">🗑️</span></button>
-                </div>
+                    <div class="flex space-x-2">
+                        <button class="preview-btn action-btn" title="Предпросмотр"><span class="text-lg">👁️</span></button>
+                        <button class="rename-btn action-btn" title="Переименовать"><span class="text-lg">✏️</span></button>
+                        <button class="remove-btn action-btn" title="Удалить"><span class="text-lg">🗑️</span></button>
+                    </div>
                 </div>
             </div>
         `;
@@ -137,109 +137,70 @@ class FileCard {
         return card;
     }
 
+
     /**
      * Назначает обработчики событий для карточки
      * @param {HTMLElement} card - DOM-элемент карточки
      * @private
      */
     attachEventHandlers(card) {
-        // Preview toggle
         const previewBtn = card.querySelector('.preview-btn');
         const previewArea = card.querySelector('.preview-area');
-        const loadPreviewBtn = card.querySelector('.load-preview-btn');
-        const closePreviewBtn = card.querySelector('.close-preview-btn');
+        const contentElement = card.querySelector('.preview-content');
 
-        previewBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        previewBtn.addEventListener('click', async () => {
             if (previewArea.classList.contains('hidden')) {
                 previewArea.classList.remove('hidden');
-                // Автоматическая загрузка при первом открытии
-                if (!this.previewContent) this.loadPreviewContent(card);
+                previewBtn.classList.add('ring-2', 'ring-primary');
+                if (!this.previewContent) {
+                    await this.loadPreviewContent(contentElement);
+                }
             } else {
                 previewArea.classList.add('hidden');
+                previewBtn.classList.remove('ring-2', 'ring-primary');
             }
         });
 
-        if (closePreviewBtn) {
-            closePreviewBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                previewArea.classList.add('hidden');
-            });
-        }
-
-        if (loadPreviewBtn) {
-            loadPreviewBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.loadPreviewContent(card);
-            });
-        }
-
-        // Rename
+        // Редактирование
         const renameBtn = card.querySelector('.rename-btn');
         const editArea = card.querySelector('.edit-area');
         const input = card.querySelector('.edit-input');
         const saveBtn = card.querySelector('.save-edit-btn');
         const cancelBtn = card.querySelector('.cancel-edit-btn');
 
-        renameBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        renameBtn.addEventListener('click', () => {
             editArea.classList.remove('hidden');
+            input.focus();
             input.select();
         });
 
-        const safeExt = (() => {
-            const idx = this.fileName.lastIndexOf('.');
-            return idx === -1 ? '' : this.fileName.substring(idx);
-        })();
+        saveBtn.addEventListener('click', () => {
+            const newVal = input.value.trim();
+            if (!newVal) return Notification.show('Имя не может быть пустым', 'warning');
 
-        saveBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const newValRaw = input.value.trim();
-            if (!newValRaw) {
-                Notification.show('Имя не может быть пустым', 'warning');
-                return;
-            }
-            // Валидируем расширение: нельзя менять расширение
-            const newExtIdx = newValRaw.lastIndexOf('.');
-            const newExt = newExtIdx === -1 ? '' : newValRaw.substring(newExtIdx);
-            let finalName = newValRaw;
-            if (safeExt && newExt.toLowerCase() !== safeExt.toLowerCase()) {
-                // если пользователь попытался поменять расширение — добавляем оригинальное
-                finalName = newValRaw + safeExt;
-                Notification.show('Расширение не может быть изменено, автоматически добавлено оригинальное.', 'info');
-            }
-            this.fileName = finalName;
-            // Обновляем UI
-            card.querySelector('.file-name').textContent = this.truncateFilename(this.fileName, this.computeMaxChars());
-            card.querySelector('.edit-input').value = this.fileName;
+            this.fileName = newVal;
+            card.querySelector('.file-name').textContent =
+                this.truncateFilename(this.fileName, this.computeMaxChars());
             editArea.classList.add('hidden');
             this.onRename(this.fileName);
+
             Notification.show('Файл переименован', 'success');
         });
 
-        cancelBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            // сброс к текущему имени (не к оригиналу); по задаче "к первоначальному названию" – вернём originalName
+        cancelBtn.addEventListener('click', () => {
             input.value = this.originalName;
             this.fileName = this.originalName;
-            card.querySelector('.file-name').textContent = this.truncateFilename(this.fileName, this.computeMaxChars());
+
+            card.querySelector('.file-name').textContent =
+                this.truncateFilename(this.fileName, this.computeMaxChars());
             editArea.classList.add('hidden');
             this.onRename(this.fileName);
+
             Notification.show('Имя восстановлено', 'info');
         });
 
-        // Remove
-        const removeBtn = card.querySelector('.remove-btn');
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.onRemove();
-        });
-
-        // Enter / Escape handling inside edit input
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') saveBtn.click();
-            if (e.key === 'Escape') cancelBtn.click();
-        });
+        // Удаление
+        card.querySelector('.remove-btn').addEventListener('click', () => this.onRemove());
     }
 
     togglePreview(card) {
@@ -264,27 +225,16 @@ class FileCard {
      * @param {HTMLElement} card - DOM-элемент карточки
      * @private
      */
-    async loadPreviewContent(card) {
-        const contentElement = card.querySelector('.preview-content');
-        const loadBtn = card.querySelector('.load-preview-btn');
-        loadBtn.textContent = 'Загрузка...';
-        loadBtn.disabled = true;
-
+    async loadPreviewContent(contentElement) {
         try {
             const content = await getFileContent(this.fileId);
             const preview = content.length > CONFIG.LIMITS.maxPreviewChars
                 ? content.substring(0, CONFIG.LIMITS.maxPreviewChars) + '\n\n... [содержимое обрезано]'
                 : content;
-
             contentElement.textContent = preview || 'Содержимое файла пустое';
             this.previewContent = preview;
-            loadBtn.style.display = 'none';
-        } catch (err) {
+        } catch {
             contentElement.textContent = 'Ошибка загрузки содержимого файла';
-            console.error('Preview load error:', err);
-        } finally {
-            loadBtn.disabled = false;
-            loadBtn.textContent = '📖 Загрузить предпросмотр';
         }
     }
 }

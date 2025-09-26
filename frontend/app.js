@@ -4,10 +4,9 @@
  * @module App
  */
 
-import Notification from './components/Notification.js';
 import FileCard from './components/FileCard.js';
 import ProgressBar from './components/ProgressBar.js';
-import { uploadFiles, mergeFiles, getFileContent } from './utils/api.js';
+import { uploadFiles, mergeFiles } from './utils/api.js';
 import { setupDragAndDrop } from './utils/dragDrop.js';
 import { showNotification } from './utils/animations.js';
 import { validateFile } from './utils/validators.js';
@@ -52,14 +51,6 @@ class App {
         // Theme toggle
         this.themeToggle = document.getElementById('themeToggle');
         this.initThemeToggle();
-
-        this.outputFilenameInput.addEventListener('input', () => {
-            let v = this.outputFilenameInput.value;
-            if (!v) return;
-            if (!v.toLowerCase().endsWith('.txt')) {
-                this.outputFilenameInput.value = v.replace(/\.txt$/i, '') + '.txt';
-            }
-        });
     }
 
     /**
@@ -81,8 +72,16 @@ class App {
             }
         });
 
-        // Проводник по нажатию на зону выбора файлов
-        this.dropZone.addEventListener('click', () => this.fileInput.click());
+        // Логика добавления ".txt"
+        this.outputFilenameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.ensureTxtSuffix();
+                this.outputFilenameInput.blur();
+            }
+        });
+
+        this.outputFilenameInput.addEventListener('blur', () => this.ensureTxtSuffix());
     }
 
     /**
@@ -91,22 +90,15 @@ class App {
      */
     initThemeToggle() {
         if (!this.themeToggle) return;
-        const iconSpan = document.querySelector('.toggle-thumb .toggle-icon');
-        const thumb = document.querySelector('.toggle-thumb');
+        const iconSpan = document.querySelector('.theme-toggle-icon');
 
         this.themeToggle.checked = false;
-        if (iconSpan) iconSpan.textContent = '🌞';
+        iconSpan.textContent = '🌞';
 
         this.themeToggle.addEventListener('change', (e) => {
             const checked = e.target.checked;
-            if (iconSpan) iconSpan.textContent = checked
-                ? '🌙'
-                : '🌞';
-            // TODO(feat): пока просто анимация + состояние
+            iconSpan.textContent = checked ? '🌙' : '🌞';
             document.body.dataset.theme = checked ? 'dark' : 'light';
-            thumb.style.transform = checked ? 'translateX(0)' : '';
-
-            showNotification(checked ? 'Темная тема (визуально) выбрана' : 'Светлая тема (визуально) выбрана', 'info', 900);
         });
     }
 
@@ -117,12 +109,31 @@ class App {
     setupDragAndDrop() {
         setupDragAndDrop({
             dropZone: this.dropZone,
-            onDrop: (files) => this.handleFiles(files)
+            onDrop: (files) => this.handleFiles(files),
         });
 
-        this.dropZone.addEventListener('dragenter', () => this.dropZone.classList.add('drag-over'));
-        this.dropZone.addEventListener('dragleave', () => this.dropZone.classList.remove('drag-over'));
-        this.dropZone.addEventListener('drop', () => this.dropZone.classList.remove('drag-over'));
+        // Проводник по клику
+        this.dropZone.addEventListener('click', () => {
+            this.fileInput.click();
+        });
+
+        // События перетаскивания
+        this.dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.dropZone.classList.add('drag-over');
+        });
+
+        this.dropZone.addEventListener('dragleave', () => {
+            this.dropZone.classList.remove('drag-over');
+        });
+
+        this.dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.dropZone.classList.remove('drag-over');
+            if (e.dataTransfer?.files?.length) {
+                this.handleFiles(e.dataTransfer.files);
+            }
+        });
     }
 
     /**
@@ -138,24 +149,22 @@ class App {
             return;
         }
 
-        // Индикатор загрузки
         if (ProgressBar) ProgressBar.show();
 
         try {
             const fileIds = await uploadFiles(validFiles);
 
             if (!Array.isArray(fileIds) || fileIds.length !== validFiles.length) {
-                for (let i = 0; i < validFiles.length; i++) {
+                validFiles.forEach((file, i) => {
                     const tmpId = `local-${Date.now()}-${i}`;
-                    const file = validFiles[i];
                     this.files.set(tmpId, {
                         file,
                         originalName: file.name,
                         customName: file.name,
                         size: file.size,
-                        content: ''
+                        content: '',
                     });
-                }
+                });
             } else {
                 fileIds.forEach((id, idx) => {
                     const file = validFiles[idx];
@@ -164,7 +173,7 @@ class App {
                         originalName: file.name,
                         customName: file.name,
                         size: file.size,
-                        content: ''
+                        content: '',
                     });
                 });
             }
@@ -237,16 +246,13 @@ class App {
      */
     async handleMerge() {
         const outputFilename = this.outputFilenameInput.value || 'merged.txt';
-        if (!outputFilename) {
-            showNotification('Введите имя выходного файла', 'warning');
-            return;
-        }
         if (this.files.size === 0) {
             showNotification('Нет файлов для объединения', 'warning');
             return;
         }
 
         if (ProgressBar) ProgressBar.show();
+
         try {
             const fileIds = this.fileOrder.length > 0 ? this.fileOrder : Array.from(this.files.keys());
             const renamesObject = Object.fromEntries(this.renames);
@@ -254,10 +260,9 @@ class App {
             const result = await mergeFiles({
                 file_ids: fileIds,
                 output_filename: outputFilename,
-                file_renames: renamesObject
+                file_renames: renamesObject,
             });
 
-            // Если server вернёт Blob/ArrayBuffer - создаём ссылку
             const blob = new Blob([result], { type: 'application/octet-stream; charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -301,8 +306,8 @@ class App {
      */
     renderFileCards() {
         this.filesList.innerHTML = '';
-
         const currentOrder = this.fileOrder.length > 0 ? this.fileOrder : Array.from(this.files.keys());
+
         currentOrder.forEach((fileId) => {
             const f = this.files.get(fileId);
             if (!f) return;
@@ -313,23 +318,24 @@ class App {
                 fileSize: f.size,
                 onRename: (newName) => this.handleRename(fileId, newName),
                 onRemove: () => this.handleRemove(fileId),
-                onPreview: () => this.handlePreview(fileId)
             });
-            const el = fileCard.render();
-            this.filesList.appendChild(el);
+            this.filesList.appendChild(fileCard.render());
         });
 
         // Инициализация Sortable.js для перетаскивания
         if (this.sortableInstance) {
-            try { this.sortableInstance.destroy(); } catch (e) { /* ignore */ }
+            try {
+                this.sortableInstance.destroy();
+            } catch { }
         }
+
         if (this.files.size > 0) {
             this.sortableInstance = new Sortable(this.filesList, {
                 animation: 150,
                 ghostClass: 'opacity-60',
                 filter: '.preview-btn, .rename-btn, .remove-btn',
                 preventOnFilter: false,
-                onEnd: () => this.updateFileOrder()
+                onEnd: () => this.updateFileOrder(),
             });
         }
     }
@@ -340,11 +346,11 @@ class App {
      */
     updateFileOrder() {
         const cards = Array.from(this.filesList.querySelectorAll('[data-file-id]'));
-        const newOrder = cards.map(c => c.dataset.fileId);
+        const newOrder = cards.map((c) => c.dataset.fileId);
 
         if (JSON.stringify(newOrder) !== JSON.stringify(this.fileOrder)) {
             const reordered = new Map();
-            newOrder.forEach(id => {
+            newOrder.forEach((id) => {
                 if (this.files.has(id)) reordered.set(id, this.files.get(id));
             });
 
@@ -361,6 +367,20 @@ class App {
      */
     render() {
         this.updateUIState();
+    }
+
+
+
+    /**
+     * Проверяет, что имя файла заканчивается на ".txt"
+     * @private
+     */
+    ensureTxtSuffix() {
+        let v = this.outputFilenameInput.value.trim();
+        if (!v) return;
+        if (!v.toLowerCase().endsWith('.txt')) {
+            this.outputFilenameInput.value = v.replace(/\.txt$/i, '') + '.txt';
+        }
     }
 }
 

@@ -11,10 +11,10 @@ run:
 	@echo "💙 backend is available at: http://localhost:8080"
 	@echo "🧡 frontend is available at: http://localhost:3001"
 
-# Пересборка и запуск (без отслеживания) {runfast}
-runf:
+# Пересборка фронта и запуск
+runfe:
 	docker-compose down
-	docker-compose build
+	docker-compose build frontend --no-cache
 	docker-compose up
 	@echo "💙 backend is available at: http://localhost:8080"
 	@echo "🧡 frontend is available at: http://localhost:3001"

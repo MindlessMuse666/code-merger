@@ -22,9 +22,11 @@ export const CONFIG = {
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
     },
     LIMITS: {
-        maxPreviewChars: 500,
+        maxPreviewChars: 1024,
         maxFileSize: 10 * 1024 * 1024,
-        supportedExtensions: ['.md', '.txt', '.yaml', '.yml', '.json', '.cpp', '.go', '.py', '.html', '.css', '.js', '.sh']
+        supportedExtensions: [
+            '.md', '.txt', '.yaml', '.yml', '.json', '.cpp', '.go', '.py', '.html', '.css', '.js', '.sh'
+        ]
     },
     TEXTS: {
         appName: 'Code Merger',
@@ -34,26 +36,25 @@ export const CONFIG = {
 
 export const UI_CONFIG = {
     ANIMATIONS: { duration: 300, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
-    LAYOUT: { maxWidth: '1024px', dropZoneWidth: '672px' }
+    LAYOUT: { maxWidth: '1024px' }
 };
 
 /**
- * Выбирает иконки для файла по его расширению
- * @param {string} filename - расширение файла
- * @returns {string} emoji (иконка)
+ * Определяет иконку по имени файла
+ * @param {string} filename - Расширение файла
+ * @returns {string} Иконка (Emoji)
  */
 export const getFileIcon = (filename) => {
     if (!filename || typeof filename !== 'string') return '📁';
     const lower = filename.toLowerCase();
 
-    // Специальные имена
     if (lower === 'dockerfile' || lower.endsWith('/dockerfile')) return '🐳';
-    if (lower.includes('docker-compose') || lower.includes('docker-compose.yml') || lower.includes('docker-compose.yaml')) return '🐳';
+    if (lower.includes('docker-compose')) return '🐳';
     if (lower === 'makefile') return '🔨';
 
-    // Ищем расширение
-    const lastDot = filename.lastIndexOf('.');
-    const ext = lastDot === -1 ? '' : filename.substring(lastDot).toLowerCase();
+    const ext = (filename.lastIndexOf('.') !== -1)
+        ? filename.substring(filename.lastIndexOf('.')).toLowerCase()
+        : '';
 
     const iconMap = {
         '.md': '📝', '.txt': '📄', '.yaml': '⚙️', '.yml': '⚙️', '.json': '🔧',
@@ -64,6 +65,11 @@ export const getFileIcon = (filename) => {
     return iconMap[ext] || '📁';
 };
 
+/**
+ * Форматирует размер файла в читаемый вид
+ * @param {number} bytes - Размер файла в байтах
+ * @returns {string} - Удобочитаемая строка с размером файла
+ */
 export const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
