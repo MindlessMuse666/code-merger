@@ -36,7 +36,16 @@ export const CONFIG = {
 
 export const UI_CONFIG = {
     ANIMATIONS: { duration: 300, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
-    LAYOUT: { maxWidth: '1024px' }
+    LAYOUT: { maxWidth: '1024px' },
+    HEADER: {
+        height: '5rem',
+        logoSize: { mobile: '3rem', desktop: '3.5rem' }
+    },
+    DROP_ZONE: {
+        height: { mobile: '28rem', desktop: '32rem' },
+        iconSize: { mobile: '6rem', desktop: '8rem' },
+        hoverLighten: 0.98
+    }
 };
 
 /**

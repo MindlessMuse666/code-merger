@@ -22,7 +22,7 @@ services:
       - ./frontend:/app # Монтирование кода фронта
     ports:
       - "3001:3001" # Порт для разработки фронта
-    command: sh -c "npm install && npx @tailwindcss/cli -i ./input.css -o ./style.css --watch & npx http-server -p 3001 -P http://backend:8080 --proxy http://localhost:3001?" # Устанавка зависимостей + запуск в dev-mode
+    command: sh -c "npx http-server -p 3001 -P http://backend:8080 --proxy http://localhost:3001?" # Устанавка зависимостей + запуск в dev-mode
     environment:
       - HOST=0.0.0.0 # Разрешить доступ с любого хоста
     healthcheck:

@@ -3,6 +3,8 @@
  * @module Animations
  */
 
+import { UI_CONFIG } from '../config.js';
+
 /**
  * Применяет CSS-анимацию к элементу
  * @param {HTMLElement} element - DOM-элемент для анимации
@@ -10,21 +12,21 @@
  * @param {number} duration - Длительность анимации в миллисекундах
  * @returns {Promise} Промис, который разрешается после завершения анимации
  */
-export function animateElement(element, animationName, duration = 1000) {
+export function animateElement(element, animationName, duration = UI_CONFIG.ANIMATIONS.duration) {
     return new Promise((resolve) => {
         // Удаляем предыдущие классы анимаций
-        const animationClasses = element.className.split(' ').filter(className => 
+        const animationClasses = element.className.split(' ').filter(className =>
             className.startsWith('animate__')
         );
-        
+
         element.classList.remove(...animationClasses);
-        
+
         // Добавляем новые классы анимации
         element.classList.add('animate__animated', `animate__${animationName}`);
-        
+
         // Устанавливаем длительность анимации
         element.style.setProperty('--animate-duration', `${duration}ms`);
-        
+
         // Обрабатываем завершение анимации
         const handleAnimationEnd = () => {
             element.removeEventListener('animationend', handleAnimationEnd);
@@ -32,9 +34,30 @@ export function animateElement(element, animationName, duration = 1000) {
             element.style.removeProperty('--animate-duration');
             resolve();
         };
-        
+
         element.addEventListener('animationend', handleAnimationEnd);
     });
+}
+
+/**
+ * Активирует анимацию drag-over для зоны загрузки
+ * @param {HTMLElement} dropZone - Элемент зоны загрузки
+ */
+export function activateDropZoneAnimation(dropZone) {
+    if (!dropZone) return;
+
+    dropZone.classList.add('drag-over');
+    animateElement(dropZone, 'pulse', 500);
+}
+
+/**
+ * Деактивирует анимацию drag-over для зоны загрузки
+ * @param {HTMLElement} dropZone - Элемент зоны загрузки
+ */
+export function deactivateDropZoneAnimation(dropZone) {
+    if (!dropZone) return;
+
+    dropZone.classList.remove('drag-over');
 }
 
 /**
@@ -52,7 +75,7 @@ export function showNotification(message, type = 'info', duration = 3000) {
         container.className = 'fixed top-4 right-4 z-50 space-y-2';
         document.body.appendChild(container);
     }
-    
+
     // Определяем цвет в зависимости от типа
     const colors = {
         success: 'bg-green-500',
@@ -60,20 +83,20 @@ export function showNotification(message, type = 'info', duration = 3000) {
         warning: 'bg-yellow-500',
         info: 'bg-blue-500'
     };
-    
+
     // Создаем элемент уведомления
     const notification = document.createElement('div');
     notification.className = `${colors[type]} text-white px-4 py-2 rounded-md shadow-lg transform transition-all duration-300 animate__animated animate__fadeInRight`;
     notification.textContent = message;
-    
+
     // Добавляем уведомление в контейнер
     container.appendChild(notification);
-    
+
     // Автоматически скрываем через указанное время
     setTimeout(() => {
         notification.classList.remove('animate__fadeInRight');
         notification.classList.add('animate__fadeOutRight');
-        
+
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
@@ -83,7 +106,7 @@ export function showNotification(message, type = 'info', duration = 3000) {
 }
 
 /**
- * Создает эффект "встряски" элемента (полезно для ошибок валидации)
+ * Создает эффект "встряски" элемента (для ошибок валидации)
  * @param {HTMLElement} element - DOM-элемент для анимации
  */
 export function shakeElement(element) {
@@ -111,4 +134,29 @@ export function fadeOutElement(element, duration = 500) {
     animateElement(element, 'fadeOut', duration).then(() => {
         element.classList.add('hidden');
     });
+}
+
+/**
+ * Активирует анимацию пунктирной границы при drag-over
+ * @param {HTMLElement} dropZone - Элемент зоны загрузки
+ */
+export function activateDashedBorderAnimation(dropZone) {
+    if (!dropZone) return;
+
+    // Перезапуск анимации
+    const beforeElement = dropZone;
+    beforeElement.style.animation = 'none';
+    void beforeElement.offsetWidth;
+    beforeElement.style.animation = null;
+
+    dropZone.classList.add('drag-over');
+}
+
+/**
+ * Деактивирует анимацию пунктирной границы
+ * @param {HTMLElement} dropZone - Элемент зоны загрузки
+ */
+export function deactivateDashedBorderAnimation(dropZone) {
+    if (!dropZone) return;
+    dropZone.classList.remove('drag-over');
 }

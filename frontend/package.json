@@ -1,14 +1,8 @@
 {
   "name": "code-merger-frontend",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Фронтенд для приложения code-merger",
-  "scripts": {
-    "dev": "npx @tailwindcss/cli -i ./input.css -o ./style.css --watch",
-    "build": "npx @tailwindcss/cli -i ./input.css -o ./style.css --minify"
-  },
   "devDependencies": {
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/cli": "^4.0.0",
     "http-server": "^14.1.1"
   }
 }

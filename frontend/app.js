@@ -10,6 +10,7 @@ import { uploadFiles, mergeFiles } from './utils/api.js';
 import { setupDragAndDrop } from './utils/dragDrop.js';
 import { showNotification } from './utils/animations.js';
 import { validateFile } from './utils/validators.js';
+import { UI_CONFIG } from './config.js';
 
 class App {
     /**
@@ -20,6 +21,7 @@ class App {
         this.renames = new Map();
         this.fileOrder = [];
         this.sortableInstance = null;
+        this.fileInputClicked = false;
         this.init();
     }
 
@@ -48,7 +50,7 @@ class App {
         this.outputFilenameInput = document.getElementById('outputFilename');
         this.presetSelect = document.getElementById('presetSelect');
 
-        // Theme toggle
+        // Виджет смены темы
         this.themeToggle = document.getElementById('themeToggle');
         this.initThemeToggle();
     }
@@ -59,7 +61,10 @@ class App {
      */
     setupEventListeners() {
         // Обработчик выбора файлов через input
-        this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+        this.fileInput.addEventListener('change', (e) => {
+            this.fileInputClicked = false;
+            this.handleFiles(e.target.files);
+        });
 
         // Обработчик кнопки объединения
         this.mergeButton.addEventListener('click', () => this.handleMerge());
@@ -90,15 +95,18 @@ class App {
      */
     initThemeToggle() {
         if (!this.themeToggle) return;
-        const iconSpan = document.querySelector('.theme-toggle-icon');
 
         this.themeToggle.checked = false;
-        iconSpan.textContent = '🌞';
+        document.body.dataset.theme = 'light';
 
         this.themeToggle.addEventListener('change', (e) => {
             const checked = e.target.checked;
-            iconSpan.textContent = checked ? '🌙' : '🌞';
             document.body.dataset.theme = checked ? 'dark' : 'light';
+
+            document.body.classList.add('theme-transition');
+            setTimeout(() => {
+                document.body.classList.remove('theme-transition');
+            }, UI_CONFIG.ANIMATIONS.duration);
         });
     }
 
@@ -113,23 +121,37 @@ class App {
         });
 
         // Проводник по клику
-        this.dropZone.addEventListener('click', () => {
-            this.fileInput.click();
+        this.dropZone.addEventListener('click', (e) => {
+            if (e.target === this.dropZone || e.target.closest('.enhanced-drop-zone') === this.dropZone) {
+                if (!this.isProcessingClick) {
+                    this.isProcessingClick = true;
+
+                    setTimeout(() => {
+                        this.fileInput.click();
+                        this.isProcessingClick = false;
+                    }, 10);
+                }
+            }
         });
 
-        // События перетаскивания
+        // Событие: перетаскивание
         this.dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            this.dropZone.classList.add('drag-over');
+            activateDashedBorderAnimation(this.dropZone);
         });
 
-        this.dropZone.addEventListener('dragleave', () => {
-            this.dropZone.classList.remove('drag-over');
+        this.dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+
+            if (!this.dropZone.contains(e.relatedTarget)) {
+                deactivateDashedBorderAnimation(this.dropZone);
+            }
         });
 
         this.dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            this.dropZone.classList.remove('drag-over');
+            deactivateDashedBorderAnimation(this.dropZone);
+            
             if (e.dataTransfer?.files?.length) {
                 this.handleFiles(e.dataTransfer.files);
             }
@@ -368,8 +390,6 @@ class App {
     render() {
         this.updateUIState();
     }
-
-
 
     /**
      * Проверяет, что имя файла заканчивается на ".txt"

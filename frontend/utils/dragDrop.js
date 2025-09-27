@@ -3,6 +3,8 @@
  * @module DragDrop
  */
 
+import { activateDashedBorderAnimation, deactivateDashedBorderAnimation } from './animations.js';
+
 /**
  * Настраивает drag-and-drop зону для загрузки файлов
  * @param {Object} config - Конфигурация drag-and-drop
@@ -20,7 +22,7 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDragOver = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.add('drag-over', 'animate-border-dance');
+        activateDashedBorderAnimation(dropZone);
     };
 
     /**
@@ -31,8 +33,9 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDragLeave = (e) => {
         e.preventDefault();
         e.stopPropagation();
+
         if (!dropZone.contains(e.relatedTarget)) {
-            dropZone.classList.remove('drag-over', 'animate-border-dance');
+            deactivateDashedBorderAnimation(dropZone);
         }
     };
 
@@ -44,7 +47,7 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDrop = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.remove('drag-over', 'animate-border-dance');
+        deactivateDashedBorderAnimation(dropZone);
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
