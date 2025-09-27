@@ -32,24 +32,32 @@ class ProgressBar {
         overlay.id = 'progressOverlay';
 
         overlay.innerHTML = `
-            <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 md:w-2/3 lg:w-1/3 animate__animated animate__zoomIn">
-                <div class="flex items-center space-x-4">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple"></div>
-                    <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-gray-800">Обработка</h3>
-                        <p class="text-sm text-gray-600" id="progressText">Выполняется операция...</p>
+            <div class="progress-modal animate__animated animate__zoomIn">
+                <div class="text-center">
+                    <!-- Анимированная иконка -->
+                    <div class="progress-spinner mx-auto mb-4"></div>
+                    
+                    <!-- Текст -->
+                    <h3 class="text-gradient mb-2">Обработка файлов</h3>
+                    <p class="text-muted mb-3" id="progressText">Выполняется операция...</p>
+                    
+                    <!-- Progress bar -->
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
                     </div>
-                </div>
-                <div class="mt-4 w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-purple h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+                    
+                    <!-- Дополнительная информация -->
+                    <div class="progress-details mt-2 text-sm text-muted">
+                        <span id="progressDetails">Подготовка...</span>
+                    </div>
                 </div>
             </div>
         `;
 
         document.body.appendChild(overlay);
-
         this.progressBar = document.getElementById('progressBar');
         this.progressText = document.getElementById('progressText');
+        this.progressDetails = document.getElementById('progressDetails');
         this.overlay = overlay;
     }
 

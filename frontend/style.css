@@ -93,6 +93,19 @@ body {
     text-shadow: var(--text-shadow);
 }
 
+/* ===== ЛОГОТИП ===== */
+.logo-img {
+    width: 3.5rem;
+    height: 3.5rem;
+    transition: all var(--transition-fast) ease;
+    filter: drop-shadow(0.125rem 0.125rem 0.25rem rgba(0, 0, 0, 0.1));
+}
+
+.logo-img:hover {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0.25rem 0.25rem 0.5rem rgba(0, 0, 0, 0.2));
+}
+
 /* ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ===== */
 .theme-toggle-wrapper {
     position: relative;
@@ -185,38 +198,35 @@ body {
     right: .375rem;
     bottom: .375rem;
     border: .1875rem dashed var(--color-primary);
-    /* border-image: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%) 1; */
     border-radius: inherit;
     background: transparent;
-    animation: borderRun 3s linear infinite;
+    animation: rotateBorder 20s linear infinite paused;
     pointer-events: none;
     opacity: .7;
     z-index: 1;
 }
 
 .enhanced-drop-zone:hover::before {
-    animation: borderRun 1s linear infinite;
-    animation-duration: 1s;
+    animation-play-state: running;
+    animation-duration: 10s;
     border-color: var(--color-accent-light);
     opacity: .9;
 }
 
 .enhanced-drop-zone.drag-over::before {
-    animation: borderRun .3s linear infinite;
-    animation-duration: .5s;
+    animation-play-state: running;
+    animation-duration: 2s;
     border-color: var(--color-accent);
     opacity: 1;
 }
 
-@keyframes borderRun {
+@keyframes rotateBorder {
     0% {
-        stroke-dasharray: 10, 10;
-        stroke-dashoffset: 0;
+        transform: rotate(0deg);
     }
 
     100% {
-        stroke-dasharray: 10, 10;
-        stroke-dashoffset: 20;
+        transform: rotate(360deg);
     }
 }
 
@@ -229,6 +239,50 @@ body {
 
     50% {
         box-shadow: 0 0 2.5rem rgba(205, 180, 219, 0.6);
+    }
+}
+
+/* Анимация: градиентная (выключение) */
+.enhanced-drop-zone::after {
+    display: none;
+}
+
+/* .enhanced-drop-zone::after {
+    content: "";
+    position: absolute;
+    top: .375rem;
+    left: .375rem;
+    right: .375rem;
+    bottom: .375rem;
+    border-radius: inherit;
+    background: linear-gradient(45deg,
+            transparent 40%,
+            var(--color-primary-light) 50%,
+            transparent 60%);
+    background-size: 200% 200%;
+    animation: gradientRun 3s linear infinite paused;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 2;
+} */
+
+.enhanced-drop-zone:hover::after {
+    animation-play-state: running;
+    opacity: 0.3;
+}
+
+.enhanced-drop-zone.drag-over::after {
+    animation-duration: 1s;
+    opacity: 0.6;
+}
+
+@keyframes gradientRun {
+    0% {
+        background-position: -100% -100%;
+    }
+
+    100% {
+        background-position: 100% 100%;
     }
 }
 
@@ -287,7 +341,7 @@ body {
     border: 0.0625rem solid rgba(205, 180, 219, 0.3);
 }
 
-/* ===== КОНТЕЙНЕР ФАЙЛОВ ===== */
+/* ===== КОНТЕЙНЕР: ЗАГРУЖЕННЫЕ ФАЙЛЫ ===== */
 .files-container {
     background: rgba(255, 255, 255, 0.9);
     border-radius: var(--border-radius);
@@ -306,13 +360,54 @@ body {
     background-clip: text;
 }
 
+/* ===== КОНТЕЙНЕР: НАСТРОЙКИ ВЫВОДА ===== */
 .control-title {
-    font-size: 1.5rem;
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-align: center !important;
+    margin-bottom: 1.5rem !important;
+    text-shadow: var(--text-shadow);
+}
+
+.form-label {
+    margin-left: 0.5rem;
     font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+#outputFilename,
+#presetSelect,
+#mergeButton {
+    height: 3.5rem;
+    border-radius: 1rem;
+    transition: all var(--transition-fast) ease;
+}
+
+#outputFilename:focus,
+#presetSelect:focus {
+    box-shadow: 0 0 0 0.3rem rgba(205, 180, 219, 0.25);
+}
+
+/* Кнопка: объединение */
+#mergeButton:not(:disabled) {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    border: none;
+    font-weight: 600;
+    text-shadow: var(--text-shadow);
+}
+
+#mergeButton:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+#mergeButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* ===== КАРТОЧКИ ФАЙЛОВ ===== */
@@ -356,8 +451,151 @@ body {
 }
 
 .file-info {
-    font-size: 0.875rem;
+    flex-grow: 1;
+    margin-right: 1rem;
     color: #666;
+    font-size: .875rem;
+}
+
+/* ===== КНОПКИ УПРАВЛЕНИЯ ФАЙЛАМИ ===== */
+.file-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    align-items: center;
+    height: 100%;
+}
+
+.file-actions .btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    border: 2px solid transparent;
+    opacity: 0.9;
+    transition: all var(--transition-fast) ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.file-actions .btn:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-soft);
+}
+
+.file-actions .btn:active {
+    transform: translateY(0);
+}
+
+/* Цвета кнопок с градиентным фоном */
+.preview-btn {
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.15) 0%, rgba(23, 162, 184, 0.25) 100%);
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
+.preview-btn:hover {
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.3) 0%, rgba(23, 162, 184, 0.4) 100%);
+}
+
+.preview-btn.active {
+    background: linear-gradient(135deg,
+            rgba(23, 162, 184, 0.4) 0%,
+            rgba(23, 162, 184, 0.6) 100%) !important;
+    border-color: rgba(23, 162, 184, 0.6) !important;
+    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+    transform: scale(0.95);
+}
+
+.rename-btn {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.25) 100%);
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.rename-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.4) 100%);
+}
+
+.remove-btn {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.25) 100%);
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+.remove-btn:hover {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.3) 0%, rgba(220, 53, 69, 0.4) 100%);
+}
+
+/* Состояние активной кнопки редактирования */
+.rename-btn.active {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 193, 7, 0.6) 100%);
+    border-color: rgba(255, 193, 7, 0.6);
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+/* Кнопоки редактирования */
+.save-btn,
+.cancel-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    border: 2px solid transparent;
+    opacity: 0.9;
+    transition: all var(--transition-fast) ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(40, 167, 69, 0.25) 100%);
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+.save-btn:hover {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.4) 0%, rgba(40, 167, 69, 0.6) 100%);
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.cancel-btn {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.25) 100%);
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+.cancel-btn:hover {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.4) 0%, rgba(220, 53, 69, 0.6) 100%);
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+/* Подсказки для кнопок */
+.save-btn::after,
+.cancel-btn::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--transition-fast) ease;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.save-btn:hover::after,
+.cancel-btn:hover::after {
+    opacity: 1;
 }
 
 /* ===== ПРЕДПРОСМОТР ФАЙЛОВ ===== */
@@ -412,6 +650,8 @@ body {
         transform: translateY(0);
     }
 }
+
+
 
 /* ===== УВЕДОМЛЕНИЯ ===== */
 .notifications-container {
@@ -475,7 +715,8 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, .5);
+    background: rgba(205, 180, 219, 0.7);
+    backdrop-filter: blur(10px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -493,6 +734,64 @@ body {
     transition: width .3s ease;
 }
 
+.progress-modal {
+    background: linear-gradient(135deg, #ffffff 0%, var(--color-primary-light) 100%);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--box-shadow-hover);
+    border: 2px solid var(--color-primary-light);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.progress-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid var(--color-primary-light);
+    border-top: 3px solid var(--color-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.progress-bar-container {
+    background: var(--color-primary-light);
+    border-radius: 1rem;
+    height: 0.75rem;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-bar-fill {
+    background: linear-gradient(90deg,
+            var(--color-primary) 0%,
+            var(--color-accent) 50%,
+            var(--color-primary) 100%);
+    height: 100%;
+    border-radius: 1rem;
+    transition: width 0.3s ease;
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
 /* ===== АДАПТИВНОСТЬ ===== */
 @media (max-width: 768px) {
     .sticky-header {
@@ -506,6 +805,11 @@ body {
 
     .app-title {
         font-size: 1.5rem;
+    }
+
+    .logo-img {
+        width: 3rem;
+        height: 3rem;
     }
 
     .theme-toggle-wrapper {
@@ -542,7 +846,9 @@ body {
     }
 
     .file-card {
-        padding: 1rem;
+        display: flex;
+        align-items: center;
+        min-height: 6rem;
     }
 
     .file-icon {

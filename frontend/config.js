@@ -48,6 +48,19 @@ export const UI_CONFIG = {
     }
 };
 
+export const NOTIFICATION_CONFIG = {
+    ICONS: {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    },
+    DURATIONS: {
+        long: 500,
+        short: 300
+    }
+}
+
 /**
  * Определяет иконку по имени файла
  * @param {string} filename - Расширение файла

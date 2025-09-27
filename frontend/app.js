@@ -196,6 +196,7 @@ class App {
 
             this.renderFileCards();
             this.updateUIState();
+            this.updateDropZoneSize();
 
             showNotification(`Загружено ${validFiles.length} файлов`, 'success');
         } catch (err) {
@@ -375,6 +376,25 @@ class App {
             this.fileOrder = newOrder;
 
             showNotification('Порядок файлов обновлён', 'success');
+        }
+    }
+
+    /**
+     * Обновляет размер зоны загрузки файлов
+     * @private
+     */
+    updateDropZoneSize() {
+        const hasFiles = this.files.size > 0;
+        const dropZone = this.dropZone;
+
+        if (hasFiles) {
+            dropZone.style.minHeight = '12rem';
+            dropZone.style.padding = '2rem';
+            dropZone.querySelector('.drop-zone-icon').style.fontSize = '3rem';
+        } else {
+            dropZone.style.minHeight = '18.75rem';
+            dropZone.style.padding = '3rem';
+            dropZone.querySelector('.drop-zone-icon').style.fontSize = '5rem';
         }
     }
 

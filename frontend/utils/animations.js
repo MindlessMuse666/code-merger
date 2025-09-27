@@ -3,7 +3,7 @@
  * @module Animations
  */
 
-import { UI_CONFIG } from '../config.js';
+import { NOTIFICATION_CONFIG as NC } from '../config.js';
 
 /**
  * Применяет CSS-анимацию к элементу
@@ -73,7 +73,10 @@ export function showNotification(message, type = 'info', duration = 4000) {
     notification.className = `notification ${type}`;
     notification.innerHTML = `
         <div class="d-flex align-items-center justify-content-between">
-            <span>${message}</span>
+            <div class="d-flex align-items-center">
+                <span class="notification-icon me-2 fs-5">${NC.ICONS[type]}</span>
+                <span>${message}</span>
+            </div>
             <button class="btn-close btn-close-sm" onclick="this.parentElement.parentElement.remove()"></button>
         </div>
     `;
@@ -87,7 +90,7 @@ export function showNotification(message, type = 'info', duration = 4000) {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
             }
-        }, 300);
+        }, NC.DURATIONS.short);
     }, duration);
 
     // Ручное закрытие
@@ -98,7 +101,7 @@ export function showNotification(message, type = 'info', duration = 4000) {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
             }
-        }, 300);
+        }, NC.DURATIONS.short);
     });
 }
 
@@ -107,7 +110,7 @@ export function showNotification(message, type = 'info', duration = 4000) {
  * @param {HTMLElement} element - DOM-элемент для анимации
  */
 export function shakeElement(element) {
-    animateElement(element, 'shakeX', 500);
+    animateElement(element, 'shakeX', NC.DURATIONS.long);
 }
 
 /**
@@ -115,7 +118,7 @@ export function shakeElement(element) {
  * @param {HTMLElement} element - DOM-элемент для показа
  * @param {number} duration - Длительность анимации в миллисекундах
  */
-export function fadeInElement(element, duration = 500) {
+export function fadeInElement(element, duration = NC.DURATIONS.long) {
     element.classList.remove('d-none');
     animateElement(element, 'fadeIn', duration);
 }
@@ -125,7 +128,7 @@ export function fadeInElement(element, duration = 500) {
  * @param {HTMLElement} element - DOM-элемент для скрытия
  * @param {number} duration - Длительность анимации в миллисекундах
  */
-export function fadeOutElement(element, duration = 500) {
+export function fadeOutElement(element, duration = NC.DURATIONS.long) {
     animateElement(element, 'fadeOut', duration).then(() => {
         element.classList.add('d-none');
     });
