@@ -228,14 +228,25 @@ class App {
      * @param {string} fileId - ID файла для удаления
      */
     handleRemove(fileId) {
-        if (!this.files.has(fileId)) return;
+        console.log('Attempting to remove file:', fileId);
+        console.log('Files before removal:', Array.from(this.files.keys()));
+
+        if (!this.files.has(fileId)) {
+            console.error('File not found:', fileId);
+            return;
+        }
 
         const fileData = this.files.get(fileId);
         this.renames.delete(fileData.originalName);
         this.files.delete(fileId);
 
+        console.log('Files after removal:', Array.from(this.files.keys()));
+
         this.renderFileCards();
         this.updateUIState();
+        this.updateDropZoneSize();
+
+        showNotification('Файл удален', 'info');
     }
 
     /**

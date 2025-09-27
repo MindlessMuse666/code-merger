@@ -145,26 +145,28 @@ class FileCard {
 
         // Обработчик кнопки редактирования
         const renameBtn = card.querySelector('.rename-btn');
-        const editArea = card.querySelector('.edit-area');
         const saveBtn = card.querySelector('.save-btn');
         const cancelBtn = card.querySelector('.cancel-btn');
         const editInput = card.querySelector('.edit-area input');
 
         renameBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.toggleEditMode(card, true);
+            console.log('Rename button clicked, current editing state:', this.isEditing);
+            this.toggleEditMode(card);
         });
 
         // Обработчик сохранения
         saveBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            console.log('Save button clicked');
             this.saveFileName(card);
         });
 
-        // Обработчик сброса
+        // Обработчик сброса - ПОЛНОСТЬЮ ПЕРЕРАБОТАН
         cancelBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.cancelEdit(card);
+            console.log('Cancel button clicked');
+            this.cancelEdit(card, true); // true - показать уведомление
         });
 
         // Сохранение по Enter
@@ -176,19 +178,8 @@ class FileCard {
             e.stopPropagation();
         });
 
-        // Закрытие при клике вне области
-        document.addEventListener('click', (e) => {
-            if (this.isEditing && !card.contains(e.target)) {
-                this.cancelEdit(card);
-            }
-        });
-
-        editInput.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-        });
-        editInput.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+        // Обработчик клика вне области редактирования
+        this.setupClickOutsideHandler(card);
     }
 
     /** 
@@ -197,23 +188,25 @@ class FileCard {
      * @param {boolean} forceOpen - 
      * @private
     */
-    toggleEditMode(card, forceOpen = false) {
+    toggleEditMode(card) {
         const editArea = card.querySelector('.edit-area');
         const renameBtn = card.querySelector('.rename-btn');
         const editInput = card.querySelector('.edit-area input');
 
-        if (forceOpen || !this.isEditing) {
-            // Открывает редактирование
+        if (this.isEditing) {
+            this.cancelEdit(card, false);
+        } else {
+            // Открытие редактирования
             this.isEditing = true;
-            this.originalFileName = this.fileName;
+            this.originalFileName = this.fileName; // Сохранение оригинального имени
+
             editArea.classList.remove('d-none');
             renameBtn.classList.add('active');
             editInput.value = this.getFileNameWithoutExtension(this.fileName);
             editInput.focus();
             editInput.select();
-        } else {
-            // Закрывает редактирование
-            this.cancelEdit(card);
+
+            console.log('Edit mode opened');
         }
     }
 
@@ -231,66 +224,14 @@ class FileCard {
             return;
         }
 
-        // Добавляет расширение (если нужно)
-        const ext = this.getFileExtension(this.originalFileName);
-        if (ext && !newName.endsWith(ext)) {
-            newName += ext;
-        }
-
-        // Сохраняет
-        this.fileName = newName;
-        this.onRename(newName);
-
-        // Обновляет отображение
-        const fileNameElement = card.querySelector('.file-name');
-        fileNameElement.textContent = this.truncateFilename(newName, this.computeMaxChars());
-        fileNameElement.title = newName;
-
-        // Закрывает редактирование
-        this.cancelEdit(card);
-        showNotification('Файл успешно переименован', 'success');
-    }
-
-    /** 
-     * Обрабатывает остановку редактирования названия файла
-     * @param {HTMLElement} card - DOM-элемент карточки
-     * @private
-    */
-    cancelEdit(card) {
-        const editArea = card.querySelector('.edit-area');
-        const renameBtn = card.querySelector('.rename-btn');
-        const editInput = card.querySelector('.edit-area input');
-
-        this.isEditing = false;
-        editArea.classList.add('d-none');
-        renameBtn.classList.remove('active');
-
-        // Восстанавливает исходное имя
-        if (editInput) {
-            editInput.value = this.getFileNameWithoutExtension(this.originalFileName || this.fileName);
-        }
-    }
-
-    /** 
-     * Обрабатывает сохранение названия файла
-     * @param {HTMLElement} card - DOM-элемент карточки
-     * @private
-    */
-    saveEdit(card) {
-        let newName = this.editInput.value.trim();
-
-        if (!newName) {
-            showNotification('Имя файла не может быть пустым', 'warning');
-            return;
-        }
-
         // Добавление расширения (если нужно)
         const extension = this.getFileExtension(this.originalFileName);
         if (extension && !newName.endsWith(extension)) {
             newName += extension;
         }
 
-        // Обновление данных
+        // Сохранение изменений
+        const oldName = this.fileName;
         this.fileName = newName;
         this.onRename(newName);
 
@@ -300,9 +241,58 @@ class FileCard {
         fileNameElement.title = newName;
 
         // Закрытие редактирования
-        this.cancelEdit(card);
+        this.cancelEdit(card, false);
+        showNotification(`Файл переименован: "${this.getFileNameWithoutExtension(oldName)}" → "${this.getFileNameWithoutExtension(newName)}"`, 'success');
+    }
 
-        showNotification('Файл успешно переименован', 'success');
+    /** 
+     * Обрабатывает остановку редактирования названия файла
+     * @param {HTMLElement} card - DOM-элемент карточки
+     * @param {boolean} showNotification - Полазать ли уведомление
+     * @private
+    */
+    cancelEdit(card, showNotification = true) {
+        const editArea = card.querySelector('.edit-area');
+        const renameBtn = card.querySelector('.rename-btn');
+        const editInput = card.querySelector('.edit-area input');
+
+        this.isEditing = false;
+
+        if (editArea) editArea.classList.add('d-none');
+        if (renameBtn) renameBtn.classList.remove('active');
+
+        // Восстанавление оригинального имени в поле ввода
+        if (editInput) {
+            const originalNameWithoutExt = this.getFileNameWithoutExtension(this.originalFileName || this.fileName);
+            editInput.value = originalNameWithoutExt;
+        }
+
+        // Показать уведомления (если нужно)
+        if (showNotification) {
+            showNotification('Изменения отменены, имя файла не изменено', 'info');
+        }
+
+        console.log('Edit mode closed');
+    }
+
+    /** 
+     * Обрабатывает отмену редактирования названия файла по клику на любое место снаружи
+     * @param {HTMLElement} card - DOM-элемент карточки
+     * @private
+    */
+    setupClickOutsideHandler(card) {
+        const handleClickOutside = (e) => {
+            if (this.isEditing && !card.contains(e.target)) {
+                console.log('Click outside detected, closing edit mode');
+                this.cancelEdit(card, true);
+            }
+        };
+
+        // Добавление обработчика
+        document.addEventListener('click', handleClickOutside);
+
+        // Ссылка для удаления обработчика
+        this.clickOutsideHandler = handleClickOutside;
     }
 
     /** 
@@ -418,6 +408,13 @@ class FileCard {
         const right = base.substring(base.length - keep);
 
         return `${left}....${right}${ext}`;
+    }
+
+    // В деструкторе или методе удаления карточки
+    destroy() {
+        if (this.clickOutsideHandler) {
+            document.removeEventListener('click', this.clickOutsideHandler);
+        }
     }
 }
 

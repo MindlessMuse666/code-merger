@@ -189,7 +189,7 @@ body {
     animation: pulseGlow 1s ease-in-out infinite;
 }
 
-/* Анимация бегущей пунктирной линии */
+/* Анимация пунктирной линии */
 .enhanced-drop-zone::before {
     content: "";
     position: absolute;
@@ -197,98 +197,104 @@ body {
     left: .375rem;
     right: .375rem;
     bottom: .375rem;
-    border: .1875rem solid transparent;
+    border: .1875rem dashed var(--color-primary);
     border-radius: inherit;
-    background: conic-gradient(from 0deg,
-            var(--color-primary) 0%,
-            var(--color-primary) 10%,
-            transparent 10%,
-            transparent 20%,
-            var(--color-primary) 20%,
-            var(--color-primary) 30%,
-            transparent 30%,
-            transparent 40%,
-            var(--color-primary) 40%,
-            var(--color-primary) 50%,
-            transparent 50%,
-            transparent 60%,
-            var(--color-primary) 60%,
-            var(--color-primary) 70%,
-            transparent 70%,
-            transparent 80%,
-            var(--color-primary) 80%,
-            var(--color-primary) 90%,
-            transparent 90%,
-            transparent 100%);
-    background-size: 200% 200%;
-    animation: borderRun 3s linear infinite paused;
+    background: transparent;
+    animation: borderRun 40s linear infinite paused;
     pointer-events: none;
     opacity: .7;
     z-index: 1;
-    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    border-style: dashed;
+    border-width: .1875rem;
+    border-image: none;
 }
 
 .enhanced-drop-zone:hover::before {
     animation-play-state: running;
-    animation-duration: 2s;
+    animation-duration: 20s;
+    border-color: var(--color-accent-light);
     opacity: .9;
 }
 
 .enhanced-drop-zone.drag-over::before {
     animation-play-state: running;
-    animation-duration: .5s;
+    animation-duration: 10s;
+    border-color: var(--color-accent);
     opacity: 1;
 }
 
 @keyframes borderRun {
     0% {
+        border-color: var(--color-primary);
         background-position: 0% 0%;
     }
 
-    100% {
-        background-position: 200% 200%;
-    }
-}
-
-
-@keyframes pulseGlow {
-
-    0%,
-    100% {
-        box-shadow: 0 0 1.25rem rgba(205, 180, 219, 0.3);
+    25% {
+        border-color: var(--color-primary-light);
     }
 
     50% {
-        box-shadow: 0 0 2.5rem rgba(205, 180, 219, 0.6);
+        border-color: var(--color-primary);
+    }
+
+    75% {
+        border-color: var(--color-primary-light);
+    }
+
+    100% {
+        border-color: var(--color-primary);
+        background-position: 400% 400%;
     }
 }
+
+
+/* Анимация пунктирной линии (альтернатива: более частый пунктир) */
+.enhanced-drop-zone.alternative::before {
+    border: none;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 5px,
+            var(--color-primary) 5px,
+            var(--color-primary) 10px),
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 5px,
+            var(--color-primary) 5px,
+            var(--color-primary) 10px),
+        repeating-linear-gradient(180deg,
+            transparent,
+            transparent 5px,
+            var(--color-primary) 5px,
+            var(--color-primary) 10px),
+        repeating-linear-gradient(270deg,
+            transparent,
+            transparent 5px,
+            var(--color-primary) 5px,
+            var(--color-primary) 10px);
+    background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%;
+    background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+    background-repeat: no-repeat;
+    animation: borderRunAlternative 20s linear infinite paused;
+}
+
+@keyframes borderRunAlternative {
+    0% {
+        background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+    }
+
+    100% {
+        background-position: 100% 0, 100% 100%, 0 100%, 0 0;
+    }
+}
+
+
+
 
 /* Анимация: градиентная (выключение) */
 .enhanced-drop-zone::after {
     display: none;
 }
-
-/* .enhanced-drop-zone::after {
-    content: "";
-    position: absolute;
-    top: .375rem;
-    left: .375rem;
-    right: .375rem;
-    bottom: .375rem;
-    border-radius: inherit;
-    background: linear-gradient(45deg,
-            transparent 40%,
-            var(--color-primary-light) 50%,
-            transparent 60%);
-    background-size: 200% 200%;
-    animation: gradientRun 3s linear infinite paused;
-    pointer-events: none;
-    opacity: 0;
-    z-index: 2;
-} */
 
 .enhanced-drop-zone:hover::after {
     animation-play-state: running;
@@ -562,13 +568,17 @@ body {
     background: linear-gradient(135deg, rgba(23, 162, 184, 0.3) 0%, rgba(23, 162, 184, 0.4) 100%);
 }
 
+.preview-btn.active,
+.rename-btn.active {
+    box-shadow: none !important;
+    transform: translateY(0) !important;
+}
+
 .preview-btn.active {
     background: linear-gradient(135deg,
-            rgba(23, 162, 184, 0.4) 0%,
-            rgba(23, 162, 184, 0.6) 100%) !important;
+            rgba(23, 162, 184, 0.3) 0%,
+            rgba(23, 162, 184, 0.5) 100%) !important;
     border-color: rgba(23, 162, 184, 0.6) !important;
-    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
-    transform: scale(0.95);
 }
 
 .rename-btn {
@@ -591,9 +601,10 @@ body {
 
 /* Состояние активной кнопки редактирования */
 .rename-btn.active {
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 193, 7, 0.6) 100%);
-    border-color: rgba(255, 193, 7, 0.6);
-    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    background: linear-gradient(135deg,
+            rgba(255, 193, 7, 0.3) 0%,
+            rgba(255, 193, 7, 0.5) 100%) !important;
+    border-color: rgba(255, 193, 7, 0.6) !important;
 }
 
 /* Кнопоки редактирования */
@@ -602,7 +613,7 @@ body {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 0.75rem;
-    border: 2px solid transparent;
+    border: 2px solid;
     opacity: 0.9;
     transition: all var(--transition-fast) ease;
     display: flex;
@@ -610,28 +621,58 @@ body {
     justify-content: center;
     font-size: 1.1rem;
     position: relative;
+    background: transparent;
 }
 
+/* Кнопка Сохранить */
 .save-btn {
-    background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(40, 167, 69, 0.25) 100%);
-    border-color: rgba(40, 167, 69, 0.3);
+    background: linear-gradient(135deg,
+            rgba(40, 167, 69, 0.15) 0%,
+            rgba(40, 167, 69, 0.25) 100%);
+    border-color: rgba(40, 167, 69, 0.4);
 }
 
 .save-btn:hover {
-    background: linear-gradient(135deg, rgba(40, 167, 69, 0.4) 0%, rgba(40, 167, 69, 0.6) 100%);
+    background: linear-gradient(135deg,
+            rgba(40, 167, 69, 0.3) 0%,
+            rgba(40, 167, 69, 0.4) 100%);
+    border-color: rgba(40, 167, 69, 0.7);
     opacity: 1;
     transform: translateY(-2px);
 }
 
+.save-btn:active {
+    border-color: rgba(40, 167, 69, 0.8);
+    transform: translateY(0);
+}
+
+/* Кнопка Сброс */
 .cancel-btn {
-    background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.25) 100%);
-    border-color: rgba(220, 53, 69, 0.3);
+    background: linear-gradient(135deg,
+            rgba(220, 53, 69, 0.15) 0%,
+            rgba(220, 53, 69, 0.25) 100%);
+    border-color: rgba(220, 53, 69, 0.4);
+    /* Чуть темнее фона */
 }
 
 .cancel-btn:hover {
-    background: linear-gradient(135deg, rgba(220, 53, 69, 0.4) 0%, rgba(220, 53, 69, 0.6) 100%);
+    background: linear-gradient(135deg,
+            rgba(220, 53, 69, 0.3) 0%,
+            rgba(220, 53, 69, 0.4) 100%);
+    border-color: rgba(220, 53, 69, 0.7);
     opacity: 1;
     transform: translateY(-2px);
+}
+
+.cancel-btn:active {
+    border-color: rgba(220, 53, 69, 0.8);
+    transform: translateY(0);
+}
+
+.save-btn:focus,
+.cancel-btn:focus {
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Подсказки для кнопок */
@@ -820,6 +861,18 @@ body {
 
     100% {
         transform: rotate(360deg);
+    }
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 1.25rem rgba(205, 180, 219, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 2.5rem rgba(205, 180, 219, 0.6);
     }
 }
 
