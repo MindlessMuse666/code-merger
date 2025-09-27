@@ -86,48 +86,42 @@ class FileCard {
         const icon = getFileIcon(this.fileName);
 
         card.innerHTML = `
-            <div class="flex items-start w-full gap-4">
+            <div class="d-flex align-items-start w-100 gap-3">
                 <!-- Иконка -->
                 <div class="flex-shrink-0">
-                    <div class="text-3xl w-12 h-12 flex items-center justify-center">${icon}</div>
+                <div class="fs-2 w-50 h-50 d-flex align-items-center justify-content-center">${icon}</div>
                 </div>
 
                 <!-- Инфо -->
-                <div class="flex-1 min-w-0">
-                    <div class="file-name text-lg font-semibold text-gray-900" title="${this.fileName}">${displayName}</div>
-                    <div class="file-info flex items-center space-x-3 text-xs text-gray-600 mt-2">
-                        <span class="bg-primary bg-opacity-20 px-2 py-1 rounded-full"
-                            title="${this.originalName}">${displayOriginal}</span>
-                        <span class="bg-secondary bg-opacity-20 px-2 py-1 rounded-full">${formatFileSize(this.fileSize)}</span>
-                    </div>
+                <div class="flex-grow-1 min-w-0">
+                <div class="file-name fw-bold text-dark" title="${this.fileName}">${displayName}</div>
+                <div class="file-info d-flex align-items-center gap-2 text-muted small mt-2">
+                    <span class="bg-primary bg-opacity-25 px-2 py-1 rounded-pill" title="${this.originalName}">${displayOriginal}</span>
+                    <span class="bg-secondary bg-opacity-25 px-2 py-1 rounded-pill">${formatFileSize(this.fileSize)}</span>
+                </div>
 
-                    <!-- Предпросмотр -->
-                    <div class="preview-area hidden mt-3 smooth-transition">
-                        <div
-                            class="preview-content text-sm text-gray-600 bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto font-mono whitespace-pre">
-                        </div>
-                    </div>
+                <!-- Предпросмотр -->
+                <div class="preview-area d-none mt-3">
+                    <div class="preview-content small text-muted bg-light rounded p-3 max-h-200 overflow-auto font-monospace whitespace-pre"></div>
+                </div>
 
-                    <!-- Редактирование -->
-                    <div class="edit-area hidden mt-3 smooth-transition">
-                        <div class="flex gap-2 items-center">
-                            <input type="text"
-                                class="edit-input flex-1 px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary hover:ring-2 hover:ring-primary"
-                                value="${this.fileName}">
-                            <button
-                                class="save-edit-btn px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">💾</button>
-                            <button class="cancel-edit-btn px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">↺</button>
-                        </div>
+                <!-- Редактирование -->
+                <div class="edit-area d-none mt-3">
+                    <div class="d-flex gap-2 align-items-center">
+                    <input type="text" class="form-control flex-grow-1" value="${this.fileName}">
+                    <button class="btn btn-success btn-sm">💾</button>
+                    <button class="btn btn-danger btn-sm">↺</button>
                     </div>
+                </div>
                 </div>
 
                 <!-- Действия -->
-                <div class="file-actions flex-shrink-0 flex flex-col items-end gap-2">
-                    <div class="flex space-x-2">
-                        <button class="preview-btn action-btn" title="Предпросмотр"><span class="text-lg">👁️</span></button>
-                        <button class="rename-btn action-btn" title="Переименовать"><span class="text-lg">✏️</span></button>
-                        <button class="remove-btn action-btn" title="Удалить"><span class="text-lg">🗑️</span></button>
-                    </div>
+                <div class="flex-shrink-0 d-flex flex-column align-items-end gap-2">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm preview-btn" title="Предпросмотр">👁️</button>
+                    <button class="btn btn-outline-warning btn-sm rename-btn" title="Переименовать">✏️</button>
+                    <button class="btn btn-outline-danger btn-sm remove-btn" title="Удалить">🗑️</button>
+                </div>
                 </div>
             </div>
         `;

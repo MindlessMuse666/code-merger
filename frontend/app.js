@@ -199,7 +199,9 @@ class App {
             console.error('Upload error:', err);
             showNotification('Ошибка при загрузке файлов', 'error');
         } finally {
-            if (ProgressBar) ProgressBar.hide();
+            if (ProgressBar && ProgressBar.hide) {
+                ProgressBar.hide();
+            }
         }
     }
 

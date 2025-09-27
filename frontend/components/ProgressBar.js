@@ -72,11 +72,13 @@ class ProgressBar {
      * Скрывает индикатор прогресса
      */
     hide() {
-        this.isVisible = false;
-        this.overlay.classList.add('hidden');
-        this.overlay.classList.remove('animate__zoomIn');
+        if (!this.overlay) return;
 
-        // Разблокируем интерфейс
+        this.isVisible = false;
+        if (this.overlay.classList) {
+            this.overlay.classList.add('hidden');
+            this.overlay.classList.remove('animate__zoomIn');
+        }
         this.disableUI(false);
     }
 
