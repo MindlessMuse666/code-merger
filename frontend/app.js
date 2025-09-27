@@ -163,7 +163,9 @@ class App {
             return;
         }
 
-        if (ProgressBar) ProgressBar.show();
+        if (typeof ProgressBar !== 'undefined' && ProgressBar.show) {
+            ProgressBar.show('Загрузка файлов...');
+        }
 
         try {
             const fileIds = await uploadFiles(validFiles);
@@ -194,13 +196,14 @@ class App {
 
             this.renderFileCards();
             this.updateUIState();
+
             showNotification(`Загружено ${validFiles.length} файлов`, 'success');
         } catch (err) {
             console.error('Upload error:', err);
             showNotification('Ошибка при загрузке файлов', 'error');
         } finally {
-            if (ProgressBar && ProgressBar.hide) {
-                ProgressBar.hide();
+            if (typeof ProgressBar !== 'undefined' && ProgressBar.hide) {
+                setTimeout(() => ProgressBar.hide(), 500);
             }
         }
     }
@@ -305,14 +308,10 @@ class App {
     updateUIState() {
         const hasFiles = this.files.size > 0;
 
-        if (hasFiles) {
-            this.filesContainer.classList.remove('hidden');
-            this.controlPanel.classList.remove('hidden');
-        } else {
-            this.filesContainer.classList.add('hidden');
-            this.controlPanel.classList.add('hidden');
-        }
+        console.log('updateUIState, hasFiles:', hasFiles);
 
+        this.filesContainer.classList.toggle('d-none', !hasFiles);
+        this.controlPanel.classList.toggle('d-none', !hasFiles);
         this.mergeButton.disabled = !hasFiles;
     }
 
@@ -321,6 +320,8 @@ class App {
      * @private
      */
     renderFileCards() {
+        console.log('renderFileCards called, files count:', this.files.size);
+
         this.filesList.innerHTML = '';
         const currentOrder = this.fileOrder.length > 0 ? this.fileOrder : Array.from(this.files.keys());
 
