@@ -22,7 +22,7 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDragOver = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        activateDashedBorderAnimation(dropZone);
+        dropZone.classList.add('drag-over');
     };
 
     /**
@@ -33,9 +33,8 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDragLeave = (e) => {
         e.preventDefault();
         e.stopPropagation();
-
         if (!dropZone.contains(e.relatedTarget)) {
-            deactivateDashedBorderAnimation(dropZone);
+            dropZone.classList.remove('drag-over');
         }
     };
 
@@ -47,7 +46,7 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     const handleDrop = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        deactivateDashedBorderAnimation(dropZone);
+        dropZone.classList.remove('drag-over');
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -59,18 +58,4 @@ export function setupDragAndDrop({ dropZone, onDrop }) {
     dropZone.addEventListener('dragover', handleDragOver);
     dropZone.addEventListener('dragleave', handleDragLeave);
     dropZone.addEventListener('drop', handleDrop);
-
-    // Клик по зоне
-    dropZone.addEventListener('click', () => {
-        document.getElementById('fileInput').click();
-    });
-
-    // Визуальная обратная связь при наведении
-    dropZone.addEventListener('mouseenter', () => {
-        dropZone.style.transform = 'scale(1.02)';
-    });
-
-    dropZone.addEventListener('mouseleave', () => {
-        dropZone.style.transform = 'scale(1)';
-    });
 }

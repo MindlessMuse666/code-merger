@@ -12,22 +12,16 @@ import { UI_CONFIG } from '../config.js';
  * @param {number} duration - Длительность анимации в миллисекундах
  * @returns {Promise} Промис, который разрешается после завершения анимации
  */
-export function animateElement(element, animationName, duration = UI_CONFIG.ANIMATIONS.duration) {
+export function animateElement(element, animationName, duration = 300) {
     return new Promise((resolve) => {
-        // Удаляем предыдущие классы анимаций
         const animationClasses = element.className.split(' ').filter(className =>
             className.startsWith('animate__')
         );
 
         element.classList.remove(...animationClasses);
-
-        // Добавляем новые классы анимации
         element.classList.add('animate__animated', `animate__${animationName}`);
-
-        // Устанавливаем длительность анимации
         element.style.setProperty('--animate-duration', `${duration}ms`);
 
-        // Обрабатываем завершение анимации
         const handleAnimationEnd = () => {
             element.removeEventListener('animationend', handleAnimationEnd);
             element.classList.remove('animate__animated', `animate__${animationName}`);
@@ -66,43 +60,46 @@ export function deactivateDropZoneAnimation(dropZone) {
  * @param {string} type - Тип сообщения (success, error, warning, info)
  * @param {number} duration - Длительность показа уведомления в миллисекундах
  */
-export function showNotification(message, type = 'info', duration = 3000) {
-    // Создаем контейнер для уведомлений если его нет
+export function showNotification(message, type = 'info', duration = 4000) {
     let container = document.getElementById('notifications-container');
     if (!container) {
         container = document.createElement('div');
         container.id = 'notifications-container';
-        container.className = 'fixed top-4 right-4 z-50 space-y-2';
+        container.className = 'notifications-container';
         document.body.appendChild(container);
     }
 
-    // Определяем цвет в зависимости от типа
-    const colors = {
-        success: 'bg-green-500',
-        error: 'bg-red-500',
-        warning: 'bg-yellow-500',
-        info: 'bg-blue-500'
-    };
-
-    // Создаем элемент уведомления
     const notification = document.createElement('div');
-    notification.className = `${colors[type]} text-white px-4 py-2 rounded-md shadow-lg transform transition-all duration-300 animate__animated animate__fadeInRight`;
-    notification.textContent = message;
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between">
+            <span>${message}</span>
+            <button class="btn-close btn-close-sm" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
 
-    // Добавляем уведомление в контейнер
     container.appendChild(notification);
 
-    // Автоматически скрываем через указанное время
-    setTimeout(() => {
-        notification.classList.remove('animate__fadeInRight');
-        notification.classList.add('animate__fadeOutRight');
-
+    // Автоматическое скрытие
+    const autoRemove = setTimeout(() => {
+        notification.classList.add('fade-out');
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
             }
         }, 300);
     }, duration);
+
+    // Ручное закрытие
+    notification.querySelector('.btn-close').addEventListener('click', () => {
+        clearTimeout(autoRemove);
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    });
 }
 
 /**
@@ -110,9 +107,7 @@ export function showNotification(message, type = 'info', duration = 3000) {
  * @param {HTMLElement} element - DOM-элемент для анимации
  */
 export function shakeElement(element) {
-    animateElement(element, 'shakeX', 500).then(() => {
-        element.classList.remove('animate__shakeX');
-    });
+    animateElement(element, 'shakeX', 500);
 }
 
 /**
@@ -121,7 +116,7 @@ export function shakeElement(element) {
  * @param {number} duration - Длительность анимации в миллисекундах
  */
 export function fadeInElement(element, duration = 500) {
-    element.classList.remove('hidden');
+    element.classList.remove('d-none');
     animateElement(element, 'fadeIn', duration);
 }
 
@@ -132,7 +127,7 @@ export function fadeInElement(element, duration = 500) {
  */
 export function fadeOutElement(element, duration = 500) {
     animateElement(element, 'fadeOut', duration).then(() => {
-        element.classList.add('hidden');
+        element.classList.add('d-none');
     });
 }
 
@@ -142,12 +137,6 @@ export function fadeOutElement(element, duration = 500) {
  */
 export function activateDashedBorderAnimation(dropZone) {
     if (!dropZone) return;
-
-    // Перезапуск анимации
-    const beforeElement = dropZone;
-    beforeElement.style.animation = 'none';
-    void beforeElement.offsetWidth;
-    beforeElement.style.animation = null;
 
     dropZone.classList.add('drag-over');
 }

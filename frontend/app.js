@@ -6,9 +6,8 @@
 
 import FileCard from './components/FileCard.js';
 import ProgressBar from './components/ProgressBar.js';
+import { activateDashedBorderAnimation, deactivateDashedBorderAnimation, showNotification } from './utils/animations.js';
 import { uploadFiles, mergeFiles } from './utils/api.js';
-import { setupDragAndDrop } from './utils/dragDrop.js';
-import { showNotification } from './utils/animations.js';
 import { validateFile } from './utils/validators.js';
 import { UI_CONFIG } from './config.js';
 
@@ -115,20 +114,15 @@ class App {
      * @private
      */
     setupDragAndDrop() {
-        setupDragAndDrop({
-            dropZone: this.dropZone,
-            onDrop: (files) => this.handleFiles(files),
-        });
-
-        // Проводник по клику
         this.dropZone.addEventListener('click', (e) => {
-            if (e.target === this.dropZone || e.target.closest('.enhanced-drop-zone') === this.dropZone) {
-                if (!this.isProcessingClick) {
-                    this.isProcessingClick = true;
-
+            if (e.target === this.dropZone || e.target.classList.contains('drop-zone-content')) {
+                if (!this.fileInputClicked) {
+                    this.fileInputClicked = true;
                     setTimeout(() => {
                         this.fileInput.click();
-                        this.isProcessingClick = false;
+                        setTimeout(() => {
+                            this.fileInputClicked = false;
+                        }, 100);
                     }, 10);
                 }
             }
@@ -142,7 +136,6 @@ class App {
 
         this.dropZone.addEventListener('dragleave', (e) => {
             e.preventDefault();
-
             if (!this.dropZone.contains(e.relatedTarget)) {
                 deactivateDashedBorderAnimation(this.dropZone);
             }
@@ -151,7 +144,6 @@ class App {
         this.dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             deactivateDashedBorderAnimation(this.dropZone);
-            
             if (e.dataTransfer?.files?.length) {
                 this.handleFiles(e.dataTransfer.files);
             }

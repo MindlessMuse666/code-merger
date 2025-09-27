@@ -24,10 +24,10 @@
                     </div>
                     <!-- Название -->
                     <div>
-                        <h1 class="app-title text-primary m-0">
+                        <h1 class="app-title gradient-text m-0">
                             Code Merger
                         </h1>
-                        <p class="app-subtitle m-0">
+                        <p class="app-subtitle gradient-subtitle m-0">
                             Объедините ваши кодовые файлы
                         </p>
                     </div>
@@ -38,8 +38,19 @@
                     <label class="theme-toggle-wrapper" for="themeToggle">
                         <input type="checkbox" id="themeToggle" class="theme-toggle-input">
                         <div class="theme-toggle-slider">
-                            <span class="theme-toggle-icon theme-toggle-sun">☀️</span>
-                            <span class="theme-toggle-icon theme-toggle-moon">🌙</span>
+                            <div class="theme-toggle-handle"></div>
+                            <div class="theme-toggle-sun">
+                                <div class="sun-core"></div>
+                                <div class="sun-ray"></div>
+                                <div class="sun-ray"></div>
+                                <div class="sun-ray"></div>
+                                <div class="sun-ray"></div>
+                            </div>
+                            <div class="theme-toggle-moon">
+                                <div class="moon-crater"></div>
+                                <div class="moon-crater"></div>
+                                <div class="moon-crater"></div>
+                            </div>
                         </div>
                     </label>
                 </div>
@@ -54,7 +65,7 @@
                 <div id="dropZone" class="enhanced-drop-zone mx-auto">
                     <div class="drop-zone-content">
                         <div class="drop-zone-icon">📁</div>
-                        <h2 class="drop-zone-title text-primary mb-3">
+                        <h2 class="drop-zone-title gradient-text mb-3">
                             Перетащите файлы сюда
                         </h2>
                         <p class="drop-zone-subtitle mb-2">или нажмите для выбора файлов</p>
@@ -70,13 +81,13 @@
 
             <!-- Зона: загруженные файлы -->
             <div id="filesContainer" class="files-container d-none">
-                <h2 class="files-title text-primary mb-4 text-center">Загруженные файлы</h2>
+                <h2 class="files-title gradient-text mb-4 text-center">Загруженные файлы</h2>
                 <div id="filesList" class="files-list"></div>
             </div>
 
             <div id="controlPanel" class="files-container d-none">
                 <div>
-                    <h3 class="control-title text-primary mb-3 text-center">Настройки вывода</h3>
+                    <h3 class="control-title gradient-text mb-3 text-center">Настройки вывода</h3>
                     <div class="row g-3 align-items-end">
                         <div class="col-md-8">
                             <label for="outputFilename" class="form-label fw-semibold">Имя выходного файла</label>
@@ -115,6 +126,9 @@
             </div>
         </main>
     </div>
+
+    <!-- Контейнер для уведомлений -->
+    <div id="notifications-container" class="notifications-container"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
