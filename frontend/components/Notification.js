@@ -3,8 +3,6 @@
  * @class Notification
  */
 
-import { CONFIG } from '../config.js';
-
 class Notification {
     constructor() {
         this.container = null;

@@ -131,19 +131,19 @@ class App {
         // Событие: перетаскивание
         this.dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            activateDashedBorderAnimation(this.dropZone);
+            this.dropZone.classList.add('drag-over');
         });
 
         this.dropZone.addEventListener('dragleave', (e) => {
             e.preventDefault();
             if (!this.dropZone.contains(e.relatedTarget)) {
-                deactivateDashedBorderAnimation(this.dropZone);
+                this.dropZone.classList.remove('drag-over');
             }
         });
 
         this.dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            deactivateDashedBorderAnimation(this.dropZone);
+            this.dropZone.classList.remove('drag-over');
             if (e.dataTransfer?.files?.length) {
                 this.handleFiles(e.dataTransfer.files);
             }
