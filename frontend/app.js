@@ -321,8 +321,6 @@ class App {
      * @private
      */
     renderFileCards() {
-        console.log('renderFileCards called, files count:', this.files.size);
-
         this.filesList.innerHTML = '';
         const currentOrder = this.fileOrder.length > 0 ? this.fileOrder : Array.from(this.files.keys());
 
@@ -335,7 +333,10 @@ class App {
                 originalName: f.originalName,
                 fileSize: f.size,
                 onRename: (newName) => this.handleRename(fileId, newName),
-                onRemove: () => this.handleRemove(fileId),
+                onRemove: () => {
+                    console.log('Removing file:', fileId);
+                    this.handleRemove(fileId);
+                },
             });
             this.filesList.appendChild(fileCard.render());
         });
